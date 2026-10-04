@@ -1,0 +1,153 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورود به سامانه پایش کشاورزی</title>
+
+    <link rel="stylesheet" href="{% static 'css/dashboard_styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/all.min.css' %}">
+
+    <style>
+        :root {
+            --primary-green: #065f46; /* سبز تیره زمردی */
+            --accent-green: #10b981;  /* سبز روشن برای تاکید */
+            --body-bg: #f3f4f6;       /* خاکستری ملایم برای پس‌زمینه */
+            --slate-800: #1e293b;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: var(--body-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+        }
+
+        .login-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 420px;
+            border-top: 10px solid var(--primary-green); /* هماهنگ با ثبت‌نام */
+        }
+
+        /* استایل فیلدهای ورودی */
+        form input {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 1rem;
+            margin-top: 0.25rem;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: 'Vazirmatn', sans-serif;
+            box-sizing: border-box;
+            background-color: #f9fafb;
+        }
+
+        form input:focus {
+            border-color: var(--accent-green);
+            background-color: white;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 1.1rem;
+            border-radius: 1.25rem;
+            font-weight: 900;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 12px rgba(6, 95, 70, 0.2);
+        }
+
+        .login-btn:hover {
+            background: #044e3a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(6, 95, 70, 0.3);
+        }
+
+        .login-btn:active {
+            transform: scale(0.98);
+        }
+
+        .error-box {
+            margin-bottom: 1.5rem;
+            padding: 0.85rem;
+            background: #fef2f2;
+            color: #991b1b;
+            font-size: 0.85rem;
+            border-radius: 1rem;
+            border: 1px solid #fee2e2;
+            font-weight: 800;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="background: var(--primary-green); width: 70px; height: 70px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: white; font-size: 2rem;">
+                <i class="fas fa-sign-in-alt"></i>
+            </div>
+            <h2 style="font-size: 1.6rem; font-weight: 900; color: var(--slate-800); margin: 0;">ورود به سامانه</h2>
+            <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem; font-weight: 700;">خوش آمدید، لطفا اطلاعات خود را وارد کنید</p>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="error-box">
+            <i class="fas fa-exclamation-circle ml-1"></i> نام کاربری یا رمز عبور اشتباه است.
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                {% for field in form %}
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #374151; margin-right: 0.5rem;">
+                        {{ field.label }}
+                    </label>
+                    <div style="margin-top: 0.25rem;">
+                        {{ field }}
+                    </div>
+                    {% if field.errors %}
+                        <p style="color: #dc2626; font-size: 0.75rem; margin-top: 0.4rem; font-weight: 700;">
+                            <i class="fas fa-times-circle ml-1"></i> {{ field.errors.0 }}
+                        </p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="login-btn">
+                ورود به حساب کاربری
+            </button>
+        </form>
+
+        <div style="margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid #f1f5f9; text-align: center;">
+            <p style="font-size: 0.9rem; color: #4b5563; font-weight: 700;">
+                هنوز ثبت‌نام نکرده‌اید؟
+                <a href="{% url 'signup' %}" style="color: var(--accent-green); text-decoration: none; font-weight: 900; margin-right: 5px;">ایجاد حساب جدید</a>
+            </p>
+            <a href="{% url 'home' %}" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: #9ca3af; text-decoration: none; transition: 0.2s;">
+                 بازگشت به صفحه اصلی <i class="fas fa-chevron-left mr-1"></i>
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>

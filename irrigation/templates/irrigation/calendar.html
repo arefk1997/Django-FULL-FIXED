@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load i18_filters %} {# فرض بر این است که فیلتر تبدیل تاریخ یا نام روز دارید #}
+
+{% block content %}
+<div class="max-w-6xl mx-auto p-4 md:p-8 bg-white rounded-3xl shadow-xl border border-gray-100">
+
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h2 class="text-3xl font-extrabold text-blue-900">📅 برنامه آبیاری هوشمند</h2>
+            <p class="text-gray-500 mt-1">پیش‌بینی وضعیت رطوبت خاک برای ۳۰ روز آینده</p>
+        </div>
+
+        <form action="{% url 'record_irrigation' plan.id %}" method="post" class="w-full md:w-auto">
+            {% csrf_token %}
+            <button type="submit" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-blue-200 transition-all active:scale-95">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                تایید آبیاری امروز
+            </button>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+            <span class="text-xs text-blue-600 block mb-1">محصول و مزرعه</span>
+            <span class="font-bold text-blue-900">{{ plan.crop.name }} - {{ plan.farm.name }}</span>
+        </div>
+        <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+            <span class="text-xs text-indigo-600 block mb-1">آخرین آبیاری ثبت شده</span>
+            <span class="font-bold text-indigo-900">{% if last_watered %}{{ last_watered|date:"Y/m/d" }}{% else %}ثبت نشده{% endif %}</span>
+        </div>
+        <div class="bg-green-50 p-4 rounded-2xl border border-green-100">
+            <span class="text-xs text-green-600 block mb-1">مبنای محاسبات</span>
+            <span class="font-bold text-green-900">استاندارد FAO-56</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3">
+        {% for day in calendar_data %}
+        <div class="relative p-4 rounded-2xl border-2 transition-all duration-300
+            {% if day.should_irrigate %}
+                border-blue-400 bg-blue-50 shadow-md scale-105 z-10
+            {% else %}
+                border-gray-50 bg-gray-50 opacity-80
+            {% endif %} flex flex-col items-center">
+
+            <span class="text-[10px] font-bold {% if day.should_irrigate %}text-blue-600{% else %}text-gray-400{% endif %} uppercase mb-1">
+                {{ day.date|date:"l" }}
+            </span>
+            <span class="text-lg font-black text-gray-800">{{ day.date|date:"j" }}</span>
+            <span class="text-xs text-gray-500 mb-3">{{ day.date|date:"F" }}</span>
+
+            {% if day.should_irrigate %}
+                <div class="text-blue-500 animate-bounce">
+                    <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2c-.3 0-.5.1-.7.3l-5.6 5.6c-2.3 2.3-2.3 6 0 8.3s6 2.3 8.3 0 2.3-6 0-8.3L10.7 2.3c-.2-.2-.4-.3-.7-.3zm0 2.4l4.9 4.9c1.5 1.5 1.5 4 0 5.5s-4 1.5-5.5 0-1.5-4 0-5.5L10 4.4z"/>
+                    </svg>
+                </div>
+                <p class="text-[10px] font-black text-blue-700 mt-1">نیاز به آب</p>
+            {% else %}
+                <div class="flex items-center gap-1 mt-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
+                    <span class="text-[10px] text-gray-500 font-mono">{{ day.need }} mm</span>
+                </div>
+            {% endif %}
+
+            {% if day.date == today %}
+            <div class="absolute -top-2 bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full font-bold shadow-sm">امروز</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-10 pt-6 border-t border-gray-100 flex flex-wrap gap-6 text-xs text-gray-500">
+        <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+            <span>روزهای پیشنهادی برای آبیاری</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-gray-200"></span>
+            <span>روزهای پایش رطوبت خاک</span>
+        </div>
+        <p class="ml-auto italic">توصیه: در صورت بارندگی شدید، تاریخ‌های فوق به صورت خودکار تغییر خواهند کرد.</p>
+    </div>
+</div>
+{% endblock %}

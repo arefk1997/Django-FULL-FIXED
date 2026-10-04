@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div dir="rtl" style="padding:30px; font-family:Tahoma;">
+    <h2>پرسشنامه‌های فعال</h2>
+    <ul>
+        {% for survey in surveys %}
+            <li>
+                <a href="{% url 'surveys:submit_survey' survey.id %}">{{ survey.title }}</a>
+            </li>
+        {% empty %}
+            <li>در حال حاضر پرسشنامه‌ی فعالی وجود ندارد.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

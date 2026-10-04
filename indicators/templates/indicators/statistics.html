@@ -1,0 +1,221 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>گزارشات آماری و تحلیلی بهره‌وری</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/vazirmatn-font@2.1.2/dist/font-face.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{% static 'accounts/js/tailwind.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Vazirmatn', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --primary-indigo: #4f46e5;
+            --accent-amber: #f59e0b;
+            --success-emerald: #10b981;
+            --dark-slate: #0f172a;
+        }
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #f8fafc; margin: 0; }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .stat-box {
+            background: white;
+            border-radius: 2rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+            transition: 0.3s;
+        }
+        .stat-box:hover { transform: translateY(-5px); }
+    </style>
+</head>
+<body>
+
+<div class="flex min-h-screen bg-slate-50" dir="rtl">
+
+    <aside class="w-80 bg-slate-900 text-white flex flex-col justify-between p-6 shadow-2xl border-l border-slate-800 shrink-0">
+        <div>
+            <div class="border-b border-slate-800 pb-6 text-center">
+                <div class="w-16 h-16 bg-blue-600/10 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-blue-400 text-2xl shadow-inner">
+                    <i class="fas fa-droplet text-blue-500"></i>
+                </div>
+                <h2 class="font-black text-sm text-slate-100 tracking-wide mb-1">مدیریت منابع آب کشور</h2>
+                <span class="text-[10px] bg-slate-800 text-blue-400 font-bold px-2.5 py-1.5 rounded-xl border border-slate-700/50 block mt-2">
+                     وزارت مرجع: {{ user.company.get_org_type_display|default:"وزارت نیرو / شرکت مادر تخصصی" }}
+                </span>
+            </div>
+
+            <nav class="space-y-2 mt-6">
+                <a href="{% url 'official_dashboard' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-chart-pie ml-3 text-base"></i>میز کار اصلی (داشبورد)
+                </a>
+                <a href="{% url 'manage_permissions' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-shield-halved ml-3 text-base"></i>مدیریت دسترسی‌ها
+                </a>
+                <a href="{% url 'indicators:manager_indicator_summary' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-gauge-high ml-3 text-base"></i>شاخص‌های بهره‌وری
+                </a>
+                <a href="{% url 'indicators:indicator_statistics' %}" class="flex items-center p-3 rounded-xl bg-blue-600 font-black text-xs text-white shadow-lg shadow-blue-600/20 transition">
+                    <i class="fas fa-file-export ml-3 text-base"></i>خروجی پاسخنامه‌ها (آمار)
+                </a>
+                <a href="{% url 'indicators:crop_list' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-list-check ml-3 text-base"></i>تعریف داده‌های ورودی
+                </a>
+            </nav>
+        </div>
+
+        <div class="border-t border-slate-800 pt-4">
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="w-full flex items-center justify-center gap-2 p-3 bg-rose-950/40 text-rose-400 hover:bg-rose-900 hover:text-white rounded-xl border border-rose-900/30 text-xs font-black transition">
+                    <i class="fas fa-right-from-bracket"></i> خروج از سیستم
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <main class="flex-grow p-4 md:p-8 overflow-y-auto">
+
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-black text-slate-900">گزارشات آماری و تحلیلی سیستم</h1>
+                <p class="text-slate-500 font-bold text-sm mt-1">پایش و تحلیل بهره‌وری آب و عملکرد محصولات تحت نظارت شرکت</p>
+            </div>
+            <button onclick="window.print()" class="bg-white text-slate-700 border-2 border-slate-200 px-5 py-2.5 rounded-xl font-black text-sm hover:bg-slate-50 transition-all flex items-center gap-2">
+                <i class="fas fa-print"></i> خروجی PDF و چاپ گزارش
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="stat-box flex items-center gap-4 border-r-8 border-indigo-600">
+                <div class="bg-indigo-50 text-indigo-600 p-4 rounded-2xl flex items-center justify-center w-14 h-14">
+                    <i class="fas fa-chart-line text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-slate-500 text-xs font-bold">میانگین شاخص بهره‌وری آب</p>
+                    <h3 class="text-2xl font-black text-slate-800 mt-1">۱.۸۵ <span class="text-xs font-normal text-slate-400">kg/m³</span></h3>
+                </div>
+            </div>
+            <div class="stat-box flex items-center gap-4 border-r-8 border-emerald-600">
+                <div class="bg-emerald-50 text-emerald-600 p-4 rounded-2xl flex items-center justify-center w-14 h-14">
+                    <i class="fas fa-tint text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-slate-500 text-xs font-bold">کل آب مصرفی محاسباتی</p>
+                    <h3 class="text-2xl font-black text-slate-800 mt-1">۴۵۰,۰۰۰ <span class="text-xs font-normal text-slate-400">m³</span></h3>
+                </div>
+            </div>
+            <div class="stat-box flex items-center gap-4 border-r-8 border-amber-500">
+                <div class="bg-amber-50 text-amber-500 p-4 rounded-2xl flex items-center justify-center w-14 h-14">
+                    <i class="fas fa-users text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-slate-500 text-xs font-bold">نسبت مشارکت کارشناسان</p>
+                    <h3 class="text-2xl font-black text-slate-800 mt-1">۹۲٪</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="stat-box">
+                <h3 class="font-black text-slate-800 mb-6 flex items-center gap-2">
+                    <span class="w-2 h-6 bg-indigo-500 rounded-full"></span> مقایسه بهره‌وری محصولات الگوی کشت
+                </h3>
+                <div class="chart-container">
+                    <canvas id="productivityChart"></canvas>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <h3 class="font-black text-slate-800 mb-6 flex items-center gap-2">
+                    <span class="w-2 h-6 bg-emerald-500 rounded-full"></span> روند ثبت داده‌های کارشناسی (ماهانه)
+                </h3>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    // تنظیمات زبان و جهت راست‌به‌چپ برای چارت‌ها
+    if (typeof Chart !== 'undefined') {
+        Chart.defaults.font.family = 'Vazirmatn, sans-serif';
+
+        // نمودار مقایسه محصولات
+        const ctxProd = document.getElementById('productivityChart').getContext('2d');
+        new Chart(ctxProd, {
+            type: 'bar',
+            data: {
+                labels: ['گندم', 'جو', 'ذرت', 'کلزا', 'چغندرقند'],
+                datasets: [{
+                    label: 'شاخص بهره‌وری (kg/m³)',
+                    data: [1.2, 0.9, 2.1, 1.5, 2.8],
+                    backgroundColor: '#4f46e5',
+                    borderRadius: 8,
+                    barThickness: 24
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // نمودار روند خطی ماهانه
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+        new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد'],
+                datasets: [{
+                    label: 'تعداد گزارش‌های ارسالی',
+                    data: [45, 82, 110, 95, 145],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.06)',
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#10b981',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

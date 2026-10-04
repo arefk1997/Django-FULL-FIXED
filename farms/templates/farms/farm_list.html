@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto p-6">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <div>
+            <h2 class="text-3xl font-black text-gray-800">مزارع من</h2>
+            <p class="text-gray-500 mt-1">مدیریت و پایش اراضی ثبت شده</p>
+        </div>
+        <a href="{% url 'farms:add_farm' %}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl font-bold transition transform hover:scale-105 shadow-lg flex items-center shadow-green-100">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            ثبت مزرعه جدید
+        </a>
+    </div>
+
+    {% if not farms %}
+    <div class="bg-white border-2 border-dashed border-gray-200 rounded-3xl p-12 text-center">
+        <div class="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">🌱</div>
+        <h3 class="text-xl font-bold text-gray-700">هنوز مزرعه‌ای ثبت نکرده‌اید</h3>
+        <p class="text-gray-500 mt-2 mb-6 text-sm">برای شروع فرآیند پایش، ابتدا باید محدوده زمین خود را روی نقشه مشخص کنید.</p>
+        <a href="{% url 'farms:add_farm' %}" class="text-green-600 font-bold hover:underline">همین حالا اولین مزرعه را ثبت کنید ←</a>
+    </div>
+    {% else %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for farm in farms %}
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
+            <div class="h-32 bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center relative">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-green-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                {% if farm.is_approved %}
+                    <span class="absolute top-4 left-4 bg-green-500 text-white text-[10px] px-2 py-1 rounded-lg font-bold">تایید شده</span>
+                {% else %}
+                    <span class="absolute top-4 left-4 bg-orange-400 text-white text-[10px] px-2 py-1 rounded-lg font-bold">در انتظار تایید</span>
+                {% endif %}
+            </div>
+
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">{{ farm.name }}</h3>
+
+                <div class="space-y-3 mb-6">
+                    <div class="flex items-center text-gray-600 text-sm">
+                        <span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center ml-2">📏</span>
+                        مساحت: <span class="font-black mr-1 text-gray-800">{{ farm.area_hectares|default:"0" }}</span> هکتار
+                    </div>
+                    <div class="flex items-center text-gray-600 text-sm">
+                        <span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center ml-2">📍</span>
+                        موقعیت: {{ farm.city.name|default:"نامشخص" }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="{% url 'farms:farm_health' farm.id %}" class="text-center py-3 bg-gray-900 text-white rounded-2xl text-xs font-bold hover:bg-black transition-all">
+                        مشاهده نقشه
+                    </a>
+                    <a href="{% url 'farms:farm_health' farm.id %}" class="text-center py-3 bg-blue-600 text-white rounded-2xl text-xs font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
+                        پایش سلامت
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

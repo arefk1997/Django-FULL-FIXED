@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}پیشخوان بهره‌بردار | سامانه بهره‌وری{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/vazirmatn-font@2.1.2/dist/font-face.css" rel="stylesheet" type="text/css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Vazirmatn', 'sans-serif'] } } } }
+</script>
+
+<div class="min-h-screen bg-slate-50 p-6 md:p-12 flex flex-col items-center justify-start" dir="rtl" style="font-family: 'Vazirmatn', sans-serif;">
+    <div class="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
+
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-700 p-8 text-white flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-2xl shadow-inner">
+                    <i class="fas fa-wheat-awn text-emerald-200"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black">خوش آمدید، {{ user.get_full_name|default:user.username }}</h1>
+                    <p class="text-xs text-emerald-100/80 font-bold mt-1">پنل اختصاصی بهره‌برداران زراعی و کشاورزی</p>
+                </div>
+            </div>
+            <span class="bg-white/20 text-white font-black text-xs px-4 py-2 rounded-xl backdrop-blur-sm border border-white/10">
+                <i class="fas fa-location-dot ml-1"></i> محدوده فعالیت: {{ farmer_region.name|default:"ثبت نشده" }}
+            </span>
+        </div>
+
+        <div class="p-8 space-y-6">
+            <div class="bg-emerald-50/50 border border-emerald-100 p-6 rounded-2xl flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xl shadow-md shadow-emerald-500/20">
+                    <i class="fas fa-circle-check"></i>
+                </div>
+                <div class="space-y-1">
+                    <h3 class="text-sm font-black text-slate-800">وضعیت حساب شما: فعال و تایید شده</h3>
+                    <p class="text-xs text-slate-400 font-bold">شما دسترسی کامل جهت ثبت اطلاعات بهره‌وری و فرم‌های زراعی را دارا هستید.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="p-6 border border-slate-100 bg-slate-50/50 rounded-2xl hover:border-emerald-300 hover:bg-white transition group cursor-pointer">
+                    <i class="fas fa-file-pen text-xl text-slate-400 group-hover:text-emerald-600 mb-3 block transition"></i>
+                    <h4 class="text-xs font-black text-slate-800 mb-1">تکمیل پرسشنامه‌های بهره‌وری آب و خاک</h4>
+                    <p class="text-[11px] text-slate-400 font-bold">ثبت دوره‌ای اطلاعات مصرف کود، وضعیت آبیاری و تناوب کشت.</p>
+                </div>
+
+                <div class="p-6 border border-slate-100 bg-slate-50/50 rounded-2xl hover:border-emerald-300 hover:bg-white transition group cursor-pointer">
+                    <i class="fas fa-seedling text-xl text-slate-400 group-hover:text-emerald-600 mb-3 block transition"></i>
+                    <h4 class="text-xs font-black text-slate-800 mb-1">شناسنامه زراعی واحد بهره‌برداری</h4>
+                    <p class="text-[11px] text-slate-400 font-bold">مشاهده متراژ اراضی، سهمیه آب و محصول تحت کشت تایید شده.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-slate-50 border-t border-slate-100 p-4 flex justify-between items-center px-8">
+            <span class="text-[10px] text-slate-400 font-bold">سامانه جامع پایش اطلاعات بهره‌وری آب و خاک کشور</span>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="text-xs font-black text-rose-600 hover:text-rose-800 flex items-center gap-1.5 transition">
+                    <i class="fas fa-right-from-bracket"></i> خروج از سیستم
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

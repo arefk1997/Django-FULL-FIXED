@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}سامانه جامع پایش کشاورزی{% endblock %}
+
+{% block content %}
+    <div class="relative bg-white overflow-hidden min-h-screen flex items-center">
+        <div class="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-100 rounded-full blur-3xl opacity-50"></div>
+        <div class="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+            <div class="text-center lg:text-right flex flex-col lg:flex-row items-center justify-between gap-12">
+
+                <div class="lg:w-1/2">
+                    <h1 class="text-4xl md:text-6xl font-black text-gray-900 leading-tight">
+                        سامانه جامع <span class="text-green-600">پایش کشاورزی</span>
+                    </h1>
+                    <p class="mt-6 text-lg text-gray-600 leading-relaxed max-w-2xl">
+                        به پلتفرم هوشمند جمع‌آوری داده‌های کشاورزی خوش آمدید. با ثبت اطلاعات دقیق مزرعه و پاسخ به پرسشنامه‌ها، ما را در بهبود بهره‌وری و خدمات‌رسانی بهتر یاری کنید.
+                    </p>
+
+                    <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'dashboard' %}" class="px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-2xl shadow-xl shadow-green-200 transition-all transform hover:-translate-y-1 text-center">
+                                ورود به میز کار
+                            </a>
+                        {% else %}
+                            <a href="{% url 'signup' %}" class="px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-2xl shadow-xl shadow-green-200 transition-all transform hover:-translate-y-1 text-center">
+                                ثبت‌نام کشاورز جدید
+                            </a>
+                            <a href="{% url 'login' %}" class="px-8 py-4 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-2xl hover:border-green-500 hover:text-green-600 transition-all text-center">
+                                ورود به حساب کاربری
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-8 flex items-center justify-center lg:justify-start gap-4 text-sm text-gray-400">
+                        <span class="flex items-center gap-1">
+                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"></path></svg>
+                            نقشه‌برداری دقیق (GIS)
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"></path></svg>
+                            پایش ماهواره‌ای NDVI
+                        </span>
+                    </div>
+                </div>
+
+                <div class="lg:w-1/2 relative">
+                    <div class="relative w-full h-[400px] md:h-[500px] bg-green-50 rounded-[3rem] overflow-hidden border-8 border-white shadow-2xl rotate-2">
+                        <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80"
+                             alt="کشاورزی مدرن"
+                             class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-green-900/40 to-transparent"></div>
+                    </div>
+
+                    <div class="absolute -bottom-6 -right-6 bg-white p-6 rounded-3xl shadow-2xl border border-gray-100 hidden md:block -rotate-3 transition-transform hover:rotate-0 duration-500">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-yellow-100 p-3 rounded-2xl text-yellow-600 italic font-bold">Smart Data</div>
+                            <div>
+                                <p class="text-xs text-gray-400 font-bold uppercase leading-none">ثبت هوشمند</p>
+                                <p class="text-sm text-gray-800 font-black mt-1">پایش لحظه‌ای مزارع</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

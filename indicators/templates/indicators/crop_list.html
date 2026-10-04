@@ -1,0 +1,159 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تعریف داده‌های ورودی - انتخاب محصول</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/vazirmatn-font@2.1.2/dist/font-face.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{% static 'accounts/js/tailwind.js' %}"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Vazirmatn', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #f8fafc; margin: 0; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up { animation: fadeInUp 0.4s ease-out forwards; }
+    </style>
+</head>
+<body>
+
+<div class="flex min-h-screen bg-slate-50" dir="rtl">
+
+    <aside class="w-80 bg-slate-900 text-white flex flex-col justify-between p-6 shadow-2xl border-l border-slate-800 shrink-0">
+        <div>
+            <div class="border-b border-slate-800 pb-6 text-center">
+                <div class="w-16 h-16 bg-blue-600/10 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-blue-400 text-2xl shadow-inner">
+                    <i class="fas fa-droplet text-blue-500"></i>
+                </div>
+                <h2 class="font-black text-sm text-slate-100 tracking-wide mb-1">مدیریت منابع آب کشور</h2>
+                <span class="text-[10px] bg-slate-800 text-blue-400 font-bold px-2.5 py-1.5 rounded-xl border border-slate-700/50 block mt-2">
+                     وزارت مرجع: {{ user.company.get_org_type_display|default:"وزارت نیرو / شرکت مادر تخصصی" }}
+                </span>
+            </div>
+
+            <nav class="space-y-2 mt-6">
+                <a href="{% url 'official_dashboard' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-chart-pie ml-3 text-base"></i>میز کار اصلی (داشبورد)
+                </a>
+                <a href="{% url 'manage_permissions' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-shield-halved ml-3 text-base"></i>مدیریت دسترسی‌ها
+                </a>
+                <a href="{% url 'indicators:manager_indicator_summary' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-gauge-high ml-3 text-base"></i>شاخص‌های بهره‌وری
+                </a>
+                <a href="{% url 'indicators:indicator_statistics' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-file-export ml-3 text-base"></i>خروجی پاسخنامه‌ها (آمار)
+                </a>
+                <a href="{% url 'indicators:crop_list' %}" class="flex items-center p-3 rounded-xl bg-blue-600 font-black text-xs text-white shadow-lg shadow-blue-600/20 transition">
+                    <i class="fas fa-list-check ml-3 text-base"></i>تعریف داده‌های ورودی
+                </a>
+            </nav>
+        </div>
+
+        <div class="border-t border-slate-800 pt-4">
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="w-full flex items-center justify-center gap-2 p-3 bg-rose-950/40 text-rose-400 hover:bg-rose-900 hover:text-white rounded-xl border border-rose-900/30 text-xs font-black transition">
+                    <i class="fas fa-right-from-bracket"></i> خروج از سیستم
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <main class="flex-grow p-8 md:p-12 overflow-y-auto">
+
+        <header class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl font-bold border border-blue-100 shadow-sm">
+                    <i class="fas fa-seedling"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-slate-800">تعریف متغیرها و داده‌های ورودی زراعی</h1>
+                    <p class="text-xs text-slate-500 font-bold mt-1.5 flex items-center gap-1.5">
+                        <i class="fas fa-info-circle text-slate-400"></i>
+                        جهت شروع فرآیند محاسبه شاخص‌ها، ابتدا محصول زراعی مورد نظر را از کادر زیر انتخاب کنید.
+                    </p>
+                </div>
+            </div>
+
+            <span class="bg-slate-100 text-slate-700 font-black text-[11px] px-3 py-1.5 rounded-lg border border-slate-200">
+                <i class="fas fa-map-marker-alt ml-1 text-slate-500"></i> حوزه پایش: {{ managed_region.name|default:"کل کشور" }}
+            </span>
+        </header>
+
+        {% if messages %}
+            {% for m in messages %}
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl mb-6 font-bold text-xs flex items-center gap-2 shadow-sm">
+                    <i class="fas fa-circle-check text-base"></i> {{ m }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <section class="bg-white rounded-[2rem] shadow-sm border border-slate-200/60 p-6 md:p-8">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                <h3 class="font-black text-sm text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-layer-group text-blue-500"></i> کاتالوگ محصولات فعال منطقه تحت نظارت
+                </h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-up">
+                {% for crop in crops %}
+                    <div class="bg-white border-2 border-slate-100 rounded-2xl p-6 shadow-sm hover:border-blue-500/40 hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <div class="w-12 h-12 bg-slate-50 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 rounded-xl flex items-center justify-center text-lg transition-colors border border-slate-100 shadow-inner">
+                                    <i class="fas fa-wheat-awn"></i>
+                                </div>
+                                <span class="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-1 rounded-md">
+                                     کد محصول: {{ crop.id }}
+                                </span>
+                            </div>
+
+                            <h4 class="font-black text-base text-slate-800 group-hover:text-blue-600 transition-colors mb-2">{{ crop.name }}</h4>
+                            <p class="text-xs text-slate-400 font-medium leading-relaxed">
+                                داده‌های ورودی عددی شامل حجم آب مصرفی، سطح زیر کشت و میزان عملکرد این محصول در هکتار.
+                            </p>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                            <div class="text-[11px] text-slate-400 font-bold">
+                                <i class="fas fa-calendar-check ml-1"></i> آخرین به‌روزرسانی: آنی
+                            </div>
+
+                            <a href="{% url 'indicators:submit_expert_answer' crop.id %}" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 text-white hover:bg-blue-600 text-xs font-black rounded-xl transition-all shadow-sm group-hover:shadow-md">
+                                ورود داده‌ها <i class="fas fa-arrow-left text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-span-full text-center py-12 space-y-3">
+                        <div class="w-16 h-16 bg-slate-50 border border-slate-100 text-slate-400 rounded-full flex items-center justify-center text-2xl mx-auto shadow-sm">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                        <p class="text-xs font-black text-slate-600">هیچ محصول زراعی در حال حاضر برای محدوده شما فعال نشده است.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+    </main>
+</div>
+
+</body>
+</html>

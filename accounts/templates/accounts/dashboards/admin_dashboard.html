@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>پنل مدیریت کل | سامانه کشاورزی</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard_styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/all.min.css' %}">
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; }
+        .main-wrapper { max-width: 1024px; margin: 2rem auto; }
+        .admin-card { background: white; border-radius: 1.5rem; shadow-box: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; border-top: 8px solid var(--danger-red); }
+        .btn-custom { padding: 0.5rem 1rem; border-radius: 0.5rem; transition: 0.3s; text-decoration: none; font-weight: bold; display: inline-block; width: 100%; text-align: center; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="main-wrapper">
+        <div class="admin-card">
+
+            <div class="flex justify-between items-center" style="padding: 2rem; background: linear-gradient(to left, white, #f8fafc); border-bottom: 1px solid #eee;">
+                <div>
+                    <h1 style="font-size: 1.875rem; font-weight: 900; color: #1f2937;">پنل مدیریت سیستم</h1>
+                    <p style="margin-top: 0.5rem; color: #4b5563;">
+                        خوش آمدید <span style="font-weight: bold; color: var(--danger-red);">{{ user.username }}</span>
+                        <span style="font-size: 0.75rem; background: #e5e7eb; padding: 0.25rem 0.5rem; border-radius: 0.5rem; margin-right: 0.5rem;">دسترسی ادمین</span>
+                    </p>
+                </div>
+                <div>
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" style="color: var(--danger-red); background: none; border: none; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-power-off"></i> خروج از سامانه
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div style="padding: 2rem;">
+                <div class="grid lg:grid-cols-3 gap-6">
+
+                    <div class="stat-card" style="border-bottom: 4px solid #fecaca;">
+                        <i class="fas fa-users text-2xl" style="color: var(--danger-red); margin-bottom: 1rem; display: block;"></i>
+                        <h3 style="font-size: 1.25rem; font-weight: bold; color: #1f2937; margin-bottom: 0.5rem;">مدیریت کاربران</h3>
+                        <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">ویرایش اطلاعات کشاورزان، تایید مدارک و تغییر دسترسی‌ها.</p>
+                        <a href="/admin/accounts/customuser/" class="btn-custom" style="background: #fef2f2; color: var(--danger-red);">مشاهده لیست</a>
+                    </div>
+
+                    <div class="stat-card" style="border-bottom: 4px solid #bfdbfe;">
+                        <i class="fas fa-chart-pie text-2xl" style="color: var(--primary-blue); margin-bottom: 1rem; display: block;"></i>
+                        <h3 style="font-size: 1.25rem; font-weight: bold; color: #1f2937; margin-bottom: 0.5rem;">گزارش پاسخ‌ها</h3>
+                        <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">مشاهده تمام پاسخ‌های ثبت شده توسط کشاورزان به صورت آنلاین.</p>
+                        <a href="{% url 'survey_report' %}" class="btn-custom" style="background: #eff6ff; color: var(--primary-blue);">لیست پاسخ‌ها</a>
+                    </div>
+
+                    <div class="stat-card" style="border-bottom: 4px solid #bbf7d0;">
+                        <i class="fas fa-file-excel text-2xl" style="color: var(--success-green); margin-bottom: 1rem; display: block;"></i>
+                        <h3 style="font-size: 1.25rem; font-weight: bold; color: #1f2937; margin-bottom: 0.5rem;">خروجی اکسل</h3>
+                        <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">دریافت فایل Excel جامع از آخرین پاسخ‌های ثبت شده در سامانه.</p>
+                        <a href="{% url 'export_excel' %}" class="btn-custom" style="background: #ecfdf5; color: var(--success-green);">دانلود فایل</a>
+                    </div>
+
+                </div>
+
+                <div style="margin-top: 2.5rem; background: #f9fafb; padding: 1.5rem; border-radius: 1.5rem; border: 2px dashed #d1d5db;" class="flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <i class="fas fa-plus-circle text-3xl" style="color: #9ca3af;"></i>
+                        <div>
+                            <h4 style="font-weight: bold; color: #1f2937;">تعریف پرسشنامه جدید</h4>
+                            <p style="font-size: 0.75rem; color: #6b7280;">برای ساخت سوالات جدید باید به بخش مدیریت دیتابیس بروید.</p>
+                        </div>
+                    </div>
+                    <a href="/admin/surveys/survey/add/" style="background: #1f2937; color: white; padding: 0.5rem 1.5rem; border-radius: 0.75rem; text-decoration: none; font-size: 0.875rem; font-weight: bold;">ساخت پرسشنامه</a>
+                </div>
+            </div>
+
+            <div style="padding: 1.5rem; background: #f9fafb; border-top: 1px solid #eee; text-align: center; color: #9ca3af; font-size: 0.75rem;">
+                سامانه هوشمند پایش اراضی کشاورزی | نسخه مدیریت ۱.۰ (آفلاین)
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

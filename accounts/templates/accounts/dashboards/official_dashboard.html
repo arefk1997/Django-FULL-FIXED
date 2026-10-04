@@ -1,0 +1,709 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/vazirmatn-font@2.1.2/dist/font-face.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="{% static 'accounts/js/tailwind.js' %}"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Vazirmatn', 'sans-serif'],
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    body { font-family: 'Vazirmatn', sans-serif; background-color: #f8fafc; }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up { animation: fadeInUp 0.3s ease-out forwards; }
+</style>
+
+<div class="flex min-h-screen bg-slate-50" dir="rtl">
+
+    <!-- اسلایدر ناوبری راست -->
+    <aside class="w-80 bg-slate-900 text-white flex flex-col justify-between p-6 shadow-2xl border-l border-slate-800 shrink-0">
+        <div>
+            <div class="border-b border-slate-800 pb-6 text-center">
+                <div class="w-16 h-16 bg-blue-600/10 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-blue-400 text-2xl shadow-inner">
+                    <i class="fas fa-droplet text-blue-500"></i>
+                </div>
+                <h2 class="font-black text-sm text-slate-100 tracking-wide mb-1">مدیریت منابع آب کشور</h2>
+
+                <span class="text-[10px] bg-slate-800 text-blue-400 font-bold px-2.5 py-1.5 rounded-xl border border-slate-700/50 block mt-2">
+                     وزارت مرجع: {{ user.company.get_org_type_display|default:"وزارت نیرو / شرکت مادر تخصصی" }}
+                </span>
+            </div>
+
+            <nav class="space-y-2 mt-6">
+                <a href="{% url 'official_dashboard' %}" class="flex items-center p-3 rounded-xl bg-blue-600 font-black text-xs text-white shadow-lg shadow-blue-600/20 transition">
+                    <i class="fas fa-chart-pie ml-3 text-base"></i>میز کار اصلی (داشبورد)
+                </a>
+                <a href="{% url 'manage_permissions' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-shield-halved ml-3 text-base"></i>مدیریت دسترسی‌ها
+                </a>
+                <a href="{% url 'indicators:manager_indicator_summary' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-gauge-high ml-3 text-base"></i>شاخص‌های بهره‌وری
+                </a>
+                <a href="{% url 'indicators:indicator_statistics' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-file-export ml-3 text-base"></i>خروجی پاسخنامه‌ها (آمار)
+                </a>
+                <a href="{% url 'indicators:crop_list' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-list-check ml-3 text-base"></i>تعریف داده‌های ورودی
+                </a>
+            </nav>
+        </div>
+
+        <div class="border-t border-slate-800 pt-4">
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="w-full flex items-center justify-center gap-2 p-3 bg-rose-950/40 text-rose-400 hover:bg-rose-900 hover:text-white rounded-xl border border-rose-900/30 text-xs font-black transition">
+                    <i class="fas fa-right-from-bracket"></i> خروج از سیستم
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- محتوای پیشخوان -->
+    <main class="flex-grow p-8 md:p-12 overflow-y-auto">
+
+        <!-- هدر اصلی -->
+        <header class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl font-bold border border-blue-100 shadow-sm">
+                    <i class="fas fa-network-wired"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-slate-800">خوش آمدید، {{ user.get_full_name|default:user.username }}</h1>
+                    <p class="text-xs text-slate-500 font-bold mt-1.5 flex items-center gap-1.5">
+                        <i class="fas fa-building text-slate-400"></i>
+                        دفتر / واحد سازمانی ملکی: <span class="text-blue-600 font-black">{{ company_name }}</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-end gap-1.5">
+                <span class="bg-slate-100 text-slate-700 font-black text-[11px] px-3 py-1.5 rounded-lg border border-slate-200">
+                    <i class="fas fa-user-shield ml-1 text-slate-500"></i> {{ position_display|default:"کارشناس عملیاتی" }} ({% if office_level_display %}{{ office_level_display }}{% else %}سطح عملیاتی{% endif %})
+                </span>
+                <span class="text-[10px] text-slate-400 font-bold">قلمرو جغرافیایی ثبتی: {{ managed_region.name|default:"ستاد مرکزی کشور" }}</span>
+            </div>
+        </header>
+
+        <!-- سیستم پیام‌ها -->
+        {% if messages %}
+            {% for m in messages %}
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl mb-6 font-bold text-xs flex items-center gap-2 shadow-sm">
+                    <i class="fas fa-circle-check text-base"></i> {{ m }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- پنل کارشناسی -->
+        {% if my_tasks is not None %}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-slate-400 font-bold block">وظایف در انتظار انجام</span>
+                    <span class="text-3xl font-black text-amber-600 block">{{ pending_tasks_count|default:"0" }}</span>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg shadow-sm">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-slate-400 font-bold block">وظایف تایید شده نهایی</span>
+                    <span class="text-3xl font-black text-emerald-600 block">{{ approved_tasks_count|default:"0" }}</span>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg shadow-sm">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-slate-400 font-bold block">وظایف نیاز به اصلاح</span>
+                    <span class="text-3xl font-black text-rose-600 block">{{ rejected_tasks_count|default:"0" }}</span>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg shadow-sm">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+            </div>
+        </div>
+
+        <section class="bg-white rounded-[2rem] shadow-sm border border-slate-200/60 p-6 md:p-8 mb-8">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                <h3 class="font-black text-sm text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-tasks text-blue-500"></i> فعالیت‌ها و وظایف ابلاغ شده به شما (پنل کارشناسی)
+                </h3>
+            </div>
+
+            {% if my_tasks %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-slate-400 font-bold">
+                                <th class="pb-3">عنوان فعالیت / وظیفه</th>
+                                <th class="pb-3">محصول مرتبط</th>
+                                <th class="pb-3">مناطق تحت پوشش ابلاغیه</th>
+                                <th class="pb-3 text-center">وضعیت تایید</th>
+                                <th class="pb-3 text-center">پیشرفت گزارش‌شده</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-700 font-bold">
+                            {% for task in my_tasks %}
+                                <tr>
+                                    <td class="py-4">
+                                        <span class="block font-black text-slate-800">{{ task.activity.title }}</span>
+                                        {% if task.manager_comment %}
+                                            <span class="block text-[11px] text-rose-500 font-bold mt-1 bg-rose-50 p-2 rounded-lg border border-rose-100">
+                                                <i class="fas fa-comment-dots ml-1"></i> نظر مدیر: {{ task.manager_comment }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 text-slate-500">{{ task.crop.name|default:"عمومی / غیرمحصولی" }}</td>
+                                    <td class="py-4">
+                                        <div class="flex flex-wrap gap-1">
+                                            {% for region in task.target_regions.all %}
+                                                <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">{{ region.name }}</span>
+                                            {% empty %}
+                                                <span class="text-slate-400">-</span>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td class="py-4 text-center">
+                                        {% if task.status == 'pending' %}
+                                            <span class="bg-amber-50 text-amber-600 border border-amber-200 px-2.5 py-1 rounded-full text-[10px]">در انتظار انجام</span>
+                                        {% elif task.status == 'submitted' %}
+                                            <span class="bg-blue-50 text-blue-600 border border-blue-200 px-2.5 py-1 rounded-full text-[10px]">ارسال شده برای بررسی</span>
+                                        {% elif task.status == 'approved' %}
+                                            <span class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-2.5 py-1 rounded-full text-[10px]">تایید نهایی شده</span>
+                                        {% else %}
+                                            <span class="bg-rose-50 text-rose-600 border border-rose-200 px-2.5 py-1 rounded-full text-[10px]">نیازمند اصلاح</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 text-center font-mono text-blue-600 font-black text-sm">
+                                        {{ task.progress_report }}٪
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-10 space-y-3">
+                    <div class="w-16 h-16 bg-slate-50 border border-slate-100 text-slate-400 rounded-full flex items-center justify-center text-2xl mx-auto">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <p class="text-xs font-black text-slate-600">در حال حاضر هیچ فعالیت یا ماموریتی به شما ابلاغ نشده است.</p>
+                </div>
+            {% endif %}
+        </section>
+        {% endif %}
+
+
+        <!-- بخش مدیریت کلان سازمانی -->
+        {% if user.position in 'head deputy group_leader expert' %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-slate-400 font-bold block">کل کشاورزان ثبت‌شده در محدوده تحت مدیریت</span>
+                    <span class="text-3xl font-black text-emerald-600 block">{{ total_farmers_count|default:"0" }} <span class="text-xs font-bold text-slate-400">نفر</span></span>
+                </div>
+                <div class="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center text-xl shadow-sm">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/60 flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-slate-400 font-bold block">شاخص بهره‌وری کل (برآورد آب)</span>
+                    <span class="text-3xl font-black text-blue-600 block">1.42</span>
+                </div>
+                <div class="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center text-xl shadow-sm">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+        </div>
+
+        <section class="bg-white rounded-[2rem] shadow-sm border border-slate-200/60 p-6 md:p-8 mb-8">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                <h3 class="font-black text-sm text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-sitemap text-blue-600"></i> وظایف ابلاغی کلان دفتر (جهت خرد کردن و ارجاع سلسله‌مراتبی رو به پایین)
+                </h3>
+            </div>
+
+            {% if my_managed_tasks %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-slate-400 font-bold">
+                                <th class="pb-3">عنوان ماموریت اداری / ستادی</th>
+                                <th class="pb-3">نوع محصول</th>
+                                <th class="pb-3 text-center">وضعیت تخصیص لایه‌ها</th>
+                                <th class="pb-3 text-center">عملیات ارجاع تیمی</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-700 font-bold">
+                            {% for task in my_managed_tasks %}
+                                <tr>
+                                    <td class="py-4 text-slate-900 font-black">{{ task.activity.title }}</td>
+                                    <td class="py-4 text-slate-500">{{ task.crop.name|default:"عمومی / غیرمحصولی" }}</td>
+                                    <td class="py-4 text-center">
+                                        {% if task.status == 'pending' %}
+                                            <span class="bg-amber-50 text-amber-600 border border-amber-200 px-2.5 py-1 rounded-full text-[10px]">در انتظار ابلاغ داخلی</span>
+                                        {% elif task.status == 'pending_assignment' %}
+                                            <span class="bg-indigo-50 text-indigo-600 border border-indigo-200 px-2.5 py-1 rounded-full text-[10px]">خرد شده / ارجاع شده به کادر زیرمجموعه</span>
+                                        {% else %}
+                                            <span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full text-[10px]">{{ task.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-4 text-center">
+                                        <button onclick="openAssignModal('{{ task.id }}', '{{ task.activity.title }}', [ {% for sub in task.activity.sub_activities.all %}{id: '{{ sub.id }}', title: '{{ sub.title }}'},{% endfor %} ])" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition text-[11px] font-black inline-flex items-center gap-1">
+                                            <i class="fas fa-sitemap"></i> خرد کردن و ارجاع وظیفه
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-10 space-y-3">
+                    <div class="w-16 h-16 bg-slate-50 border border-slate-100 text-slate-400 rounded-full flex items-center justify-center text-2xl mx-auto">
+                        <i class="fas fa-network-wired"></i>
+                    </div>
+                    <p class="text-xs font-black text-slate-600">فعالیت کلانی در سبد ارجاعات جاری دفتر شما بارگذاری نشده است.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- بخش پایش و مانیتورینگ ارجاعات صادر شده توسط کاربر (مدیر) -->
+    <section class="bg-white rounded-[2rem] shadow-sm border border-slate-200/60 p-6 md:p-8 mb-8">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+            <h3 class="font-black text-sm text-slate-800 flex items-center gap-2">
+                <i class="fas fa-eye text-emerald-600"></i> شفافیت و پایش ارجاعات داخلی دفتر (وظایف صادر شده)
+            </h3>
+        </div>
+
+        {% if assigned_tasks_history %}
+            {% regroup assigned_tasks_history by parent_task as grouped_tasks %}
+
+            <div class="space-y-3">
+                {% for group in grouped_tasks %}
+                    <div class="bg-slate-50/60 border border-slate-200/70 rounded-2xl overflow-hidden shadow-sm transition-all">
+
+                        <button type="button" onclick="toggleAccordion('task-group-{{ forloop.counter }}')" class="w-full flex items-center justify-between p-4 bg-slate-100/70 hover:bg-slate-200/50 transition-colors text-right outline-none">
+                            <div class="flex items-center gap-3">
+                                <span class="p-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-xs">
+                                    <i class="fas fa-folder-open"></i>
+                                </span>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 block font-bold">فعالیت مرجع کلان:</span>
+                                    <h4 class="text-xs font-black text-slate-800">
+                                        {% if group.grouper %}
+                                            {{ group.grouper.activity.title }}
+                                        {% else %}
+                                            {% with first_task=group.list.0 %}
+                                                {{ first_task.activity.title }}
+                                            {% endwith %}
+                                        {% endif %}
+                                    </h4>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-1 rounded-lg text-[10px] font-black">
+                                    {{ group.list|length }} ارجاع
+                                </span>
+                                <i id="icon-task-group-{{ forloop.counter }}" class="fas fa-chevron-down text-slate-400 text-xs transition-transform duration-300"></i>
+                            </div>
+                        </button>
+
+                        <div id="task-group-{{ forloop.counter }}" class="hidden border-t border-slate-200/60 bg-white overflow-x-auto">
+                            <table class="w-full text-right border-collapse text-xs">
+                                <thead>
+                                    <tr class="border-b border-slate-100 text-slate-400 font-bold bg-slate-50/50">
+                                        <th class="p-3 pr-4">مورد ارجاعی (زیرفعالیت)</th>
+                                        <th class="p-3">کارشناس مسئول</th>
+                                        <th class="p-3">قلمرو جغرافیایی ابلاغی</th>
+                                        <th class="p-3 text-center">وضعیت کلی کارشناس</th>
+                                        <th class="p-3 text-center">لغو ارجاع</th>
+                                        <th class="p-3 text-center">درصد پیشرفت کارشناسی</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-slate-700 font-bold">
+                                    {% for history_task in group.list %}
+                                        <tr class="hover:bg-slate-50/60 transition-colors">
+                                            <td class="py-4 pr-4">
+                                                {% if history_task.parent_task and history_task.activity_id != history_task.parent_task.activity_id %}
+                                                    <span class="bg-blue-50 text-blue-700 px-2 py-1 rounded-lg border border-blue-100 text-[11px] font-black w-fit block">
+                                                        {{ history_task.activity.title }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="bg-amber-50 text-amber-700 px-2 py-1 rounded-lg border border-amber-100 text-[11px] font-black w-fit block">
+                                                        کل فعالیت واگذار شده
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+
+                                            <td class="py-4 text-slate-600">
+                                                <i class="fas fa-user ml-1 text-slate-400"></i>
+                                                {{ history_task.expert.get_full_name|default:history_task.expert.username }}
+                                            </td>
+
+                                            <td class="py-4">
+                                                <div class="flex flex-wrap gap-1">
+                                                    {% for r in history_task.target_regions.all %}
+                                                        <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">{{ r.name }}</span>
+                                                    {% empty %}
+                                                        <span class="text-slate-400">پیش‌فرض (کل قلمرو)</span>
+                                                    {% endfor %}
+                                                </div>
+                                            </td>
+
+                                            <td class="py-4 text-center">
+                                                {% if history_task.status == 'pending' %}
+                                                    <span class="bg-amber-50 text-amber-600 border border-amber-200 px-2 py-0.5 rounded-md text-[10px]">در انتظار اقدام کارشناس</span>
+                                                {% elif history_task.status == 'pending_assignment' %}
+                                                    <span class="bg-indigo-50 text-indigo-600 border border-indigo-200 px-2 py-0.5 rounded-md text-[10px]">در انتظار خرد کردن / ارجاع لایه‌ای</span>
+                                                {% elif history_task.status == 'submitted' %}
+                                                    <span class="bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded-md text-[10px]">گزارش داده شده (در انتظار بررسی شما)</span>
+                                                {% elif history_task.status == 'approved' %}
+                                                    <span class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-md text-[10px]">تایید شده نهایی</span>
+                                                {% elif history_task.status == 'rejected' %}
+                                                    <span class="bg-rose-50 text-rose-600 border border-rose-200 px-2 py-0.5 rounded-md text-[10px]">رد شده / در حال اصلاح</span>
+                                                {% else %}
+                                                    <span class="bg-slate-50 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-md text-[10px]">{{ history_task.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+
+                                            <!-- 🌟 دکمه‌ی لغو ارجاع با استایل‌دهی هماهنگ و تاییدیه قبل از لغو -->
+                                            <td class="py-4 text-center">
+                                                {% if history_task.status == 'pending' or history_task.status == 'pending_assignment' %}
+                                                    <a href="{% url 'revoke_assigned_task' history_task.id %}" onclick="return confirm('آیا از لغو این ابلاغیه و بازگرداندن فعالیت به کارتابل خود اطمینان دارید؟');" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-2.5 py-1 rounded-lg transition text-[10px] font-black inline-flex items-center gap-1 shadow-sm">
+                                                        <i class="fas fa-rotate-left"></i> لغو ارجاع
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-slate-400 text-[10px] font-normal" title="به علت شروع فرآیند کار کارشناس، قفل شده است.">غیرقابل لغو</span>
+                                                {% endif %}
+                                            </td>
+
+                                            <td class="py-4 text-center font-mono text-blue-600 font-black text-sm">
+                                                {{ history_task.progress_report }}٪
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-10 space-y-3 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                <div class="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center textxl mx-auto">
+                    <i class="fas fa-history"></i>
+                </div>
+                <p class="text-xs font-black text-slate-500">شما هنوز هیچ فعالیتی را به پرسنل زیرمجموعه خود ارجاع نداده‌اید.</p>
+            </div>
+        {% endif %}
+    </section>
+
+        <!-- گزارش‌های ارسالی پرسنل -->
+        <section class="bg-white rounded-[2rem] shadow-sm border border-slate-200/60 p-6 md:p-8 mb-8">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                <h3 class="font-black text-sm text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-user-check text-indigo-500"></i> گزارش‌های ارسالی پرسنل و کارشناسان جهت ارزیابی و تایید شما
+                </h3>
+            </div>
+
+            {% if pending_tasks_review %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-slate-400 font-bold">
+                                <th class="pb-3">نام کارشناس / نیروی مسئول</th>
+                                <th class="pb-3">عنوان فعالیت ابلاغی</th>
+                                <th class="pb-3 text-center">پیشرفت گزارش شده</th>
+                                <th class="pb-3 text-center">عملیات بررسی مدیر</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-700 font-bold">
+                            {% for task in pending_tasks_review %}
+                                <tr>
+                                    <td class="py-4 text-slate-900 font-black">
+                                        {{ task.expert.get_full_name|default:task.expert.username }}
+                                        <span class="block text-[10px] text-slate-400 font-normal">سمت: {{ task.expert.get_position_display }}</span>
+                                    </td>
+                                    <td class="py-4 text-slate-600">{{ task.activity.title }}</td>
+                                    <td class="py-4 text-center font-mono text-indigo-600 font-black text-sm">{{ task.progress_report }}٪</td>
+                                    <td class="py-4">
+                                        <!-- 🌟 اصلاح فرم و دکمه اصلاح جهت بررسی الزامی بودن دلیل رد در فرانت‌اند -->
+                                        <form action="{% url 'review_task' task.id %}" method="post" id="review-form-{{ task.id }}" class="flex items-center justify-center gap-2">
+                                            {% csrf_token %}
+                                            <input type="text" name="manager_comment" id="comment-{{ task.id }}" placeholder="توضیحات/دلیل رد..." class="border border-slate-200 rounded-lg px-2 py-1 text-[11px] focus:outline-none focus:border-slate-400 w-36 font-normal">
+                                            <button type="submit" name="action" value="approved" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded-md transition text-[10px] font-black">تایید</button>
+                                            <button type="button" onclick="validateRejection('{{ task.id }}')" class="bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded-md transition text-[10px] font-black">اصلاح</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-10 space-y-3">
+                    <div class="w-16 h-16 bg-slate-50 border border-slate-100 text-slate-400 rounded-full flex items-center justify-center text-2xl mx-auto">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <p class="text-xs font-black text-slate-600">هیچ گزارش پیشرفتی در صف تایید و بررسی شما وجود ندارد.</p>
+                </div>
+            {% endif %}
+        </section>
+        {% endif %}
+
+
+        <!-- درخواست‌های کشاورزان -->
+        {% if user.can_approve_farmers %}
+        <section class="bg-white rounded-[2rem] shadow-sm border border-slate-200/60 p-6 md:p-8">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                <h3 class="font-black text-sm text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-user-clock text-amber-500"></i> درخواست‌های ثبت‌نام کشاورزان (محدوده تحت نظارت شما)
+                </h3>
+            </div>
+
+            {% if pending_farmers %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-slate-400 font-bold">
+                                <th class="pb-3">نام و نام خانوادگی بهره‌بردار</th>
+                                <th class="pb-3">کد ملی</th>
+                                <th class="pb-3">منطقه زراعی فعالیت</th>
+                                <th class="pb-3 text-center">بررسی اصالت</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-700 font-bold">
+                            {% for farmer in pending_farmers %}
+                                <tr>
+                                    <td class="py-4">{{ farmer.get_full_name|default:farmer.username }}</td>
+                                    <td class="py-4 font-mono">{{ farmer.national_code|default:"-" }}</td>
+                                    <td class="py-4"><span class="bg-slate-100 text-slate-600 px-2 py-1 rounded">{{ farmer.chosen_region.name }}</span></td>
+                                    <td class="py-4 text-center">
+                                        <a href="{% url 'approve_farmer' farmer.id %}" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg transition text-[11px] font-black">
+                                            تایید صلاحیت
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-10 space-y-3">
+                    <div class="w-16 h-16 bg-slate-50 border border-slate-100 text-slate-400 rounded-full flex items-center justify-center text-2xl mx-auto">
+                        <i class="fas fa-user-slash"></i>
+                    </div>
+                    <p class="text-xs font-black text-slate-600">در حال حاضر هیچ درخواست عضویتی از سوی کشاورزان در این منطقه ثبت نشده است.</p>
+                </div>
+            {% endif %}
+        </section>
+        {% endif %}
+
+    </main>
+</div>
+
+<!-- مدال اختصاصی ارجاع کار -->
+<div id="assignTaskModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl border border-slate-100 animate-fade-up my-8" dir="rtl">
+
+        <div class="bg-slate-50 border-b border-slate-200/80 px-6 py-5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-lg shadow-inner">
+                    <i class="fas fa-sitemap"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-black text-slate-800">خرد کردن و ارجاع کار به پرسنل زیرمجموعه دفتر</h3>
+                    <p class="text-[11px] text-slate-400 font-bold mt-0.5">انتخاب زیرفعالیت‌های مصوب سیستم، تخصیص نیرو و تفکیک جغرافیایی به صورت ردیفی</p>
+                </div>
+            </div>
+            <button onclick="closeAssignModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-lg hover:bg-slate-200/50 transition">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+
+        <form id="assignTaskForm" method="post" action="">
+            {% csrf_token %}
+            <div class="p-6">
+
+                <div class="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="w-full md:w-1/2">
+                        <label class="text-[11px] font-black text-slate-400 mb-1.5 block">فعالیت کلان مرجع دفتر:</label>
+                        <div id="modalTaskTitle" class="bg-white border-2 border-slate-200 text-slate-800 text-xs font-black rounded-xl p-3 shadow-sm"></div>
+                    </div>
+                    <div class="w-full md:w-auto text-left">
+                        <button type="button" onclick="addSubTaskRow()" class="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 px-4 py-2.5 rounded-xl font-black text-xs transition-all shadow-sm">
+                            <i class="fas fa-plus"></i> افزودن ردیف وظیفه جدید
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-4 max-h-[360px] overflow-y-auto px-1" id="subTasksContainer">
+                </div>
+
+                <div class="mt-8 pt-5 border-t border-slate-100 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeAssignModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 px-6 rounded-xl text-xs transition">
+                        انصراف
+                    </button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-8 rounded-xl text-xs shadow-lg shadow-blue-600/20 transition flex items-center gap-2">
+                        <i class="fas fa-paper-plane text-xs"></i>
+                        <span>تایید و صدور ابلاغیه‌های تفکیکی</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let currentSubActivities = [];
+
+    const subordinateOptions = `
+        <option value="">-- انتخاب پرسنل مسئول --</option>
+        {% for sub in my_subordinates %}
+            <option value="{{ sub.id }}">{{ sub.custom_full_title }}</option>
+        {% endfor %}
+    `;
+
+    const regionOptions = `
+        <option value="">-- انتخاب منطقه (اختیاری - پیش‌فرض: قلمرو کاربر) --</option>
+        {% for region in sub_regions %}
+            <option value="{{ region.id }}">{{ region.name }}</option>
+        {% endfor %}
+    `;
+
+    function toggleAccordion(groupId) {
+        const content = document.getElementById(groupId);
+        const icon = document.getElementById('icon-' + groupId);
+
+        if (content.classList.contains('hidden')) {
+            content.classList.remove('hidden');
+            if (icon) icon.style.transform = 'rotate(180deg)';
+        } else {
+            content.classList.add('hidden');
+            if (icon) icon.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    // 🌟 تابع اختصاصی برای بررسی فیلد دلیل رد (توضیحات) گزارش قبل از سابمیت شدن فرم
+    function validateRejection(taskId) {
+        const commentInput = document.getElementById('comment-' + taskId);
+        const form = document.getElementById('review-form-' + taskId);
+
+        if (!commentInput.value.trim()) {
+            alert('جهت رد کردن گزارش و عودت به کارشناس، درج "توضیحات/دلیل رد..." الزامی است.');
+            commentInput.focus();
+            return false;
+        }
+
+        // ساختن فیلد مخفی برای فرستادن اطلاعات اکشن لغو/رد در متد POST
+        const hiddenAction = document.createElement('input');
+        hiddenAction.type = 'hidden';
+        hiddenAction.name = 'action';
+        hiddenAction.value = 'rejected';
+        form.appendChild(hiddenAction);
+
+        form.submit();
+    }
+
+    function openAssignModal(taskId, taskTitle, subActivities) {
+        const modal = document.getElementById('assignTaskModal');
+        const form = document.getElementById('assignTaskForm');
+        const titleContainer = document.getElementById('modalTaskTitle');
+        const container = document.getElementById('subTasksContainer');
+
+        container.innerHTML = '';
+        currentSubActivities = subActivities;
+
+        let urlPattern = "{% url 'assign_sub_task' task_id=0 %}";
+        form.action = urlPattern.replace('0', taskId);
+
+        titleContainer.innerText = taskTitle;
+
+        addSubTaskRow();
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeAssignModal() {
+        const modal = document.getElementById('assignTaskModal');
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    function addSubTaskRow() {
+        const container = document.getElementById('subTasksContainer');
+
+        let activityOptions = `
+            <option value="ALL_ACTIVITY">-- تخصیص کل فعالیت کلان (یکجا) --</option>
+        `;
+
+        if(currentSubActivities.length > 0) {
+            currentSubActivities.forEach(function(sub) {
+                activityOptions += `<option value="${sub.id}">${sub.title}</option>`;
+            });
+        }
+
+        const rowHtml = `
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 bg-white border border-slate-200/70 p-4 rounded-2xl shadow-sm relative group hover:border-blue-300 transition-colors animate-fade-up">
+
+                <div class="lg:col-span-4">
+                    <label class="text-[11px] font-black text-slate-500 mb-1.5 block">انتخاب زیرفعالیت / ارجاع کلان:</label>
+                    <select name="sub_activity_id[]" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl p-3 outline-none focus:border-blue-500 focus:bg-white transition cursor-pointer">
+                        ${activityOptions}
+                    </select>
+                </div>
+
+                <div class="lg:col-span-4">
+                    <label class="text-[11px] font-black text-slate-500 mb-1.5 block">انتخاب کارشناس مسئول (ExpertTask.expert):</label>
+                    <select name="subordinate_id[]" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl p-3 outline-none focus:border-blue-500 focus:bg-white transition cursor-pointer">
+                        ${subordinateOptions}
+                    </select>
+                </div>
+
+                <div class="lg:col-span-3">
+                    <label class="text-[11px] font-black text-slate-500 mb-1.5 block">قلمرو جغرافیایی (Target Region):</label>
+                    <select name="sub_task_region[]" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl p-3 outline-none focus:border-blue-500 focus:bg-white transition cursor-pointer">
+                        ${regionOptions}
+                    </select>
+                </div>
+
+                <div class="lg:col-span-1 flex items-end justify-center pb-1.5">
+                    <button type="button" onclick="removeRow(this)" class="text-rose-400 hover:text-rose-600 bg-rose-50 hover:bg-rose-100 p-3 rounded-xl transition shadow-sm border border-rose-100">
+                        <i class="fas fa-trash-can text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', rowHtml);
+    }
+
+    function removeRow(button) {
+        const container = document.getElementById('subTasksContainer');
+        if (container.children.length > 1) {
+            button.closest('.grid').remove();
+        } else {
+            alert('حداقل وجود یک ردیف ابلاغیه برای ارسال الزامی است.');
+        }
+    }
+</script>
+{% endblock %}

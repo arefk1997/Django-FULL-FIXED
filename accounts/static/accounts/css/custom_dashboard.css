@@ -1,0 +1,76 @@
+/* static/css/custom_dashboard.css */
+
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Bold.woff2') format('woff2');
+    font-weight: bold;
+    font-style: normal;
+}
+
+:root {
+    /* مقادیر پیش‌فرض تم */
+    --theme-primary: #2563eb;       /* آبی روشن */
+    --theme-primary-dark: #1d4ed8;
+    --theme-accent: #eff6ff;
+}
+
+/* اعمال تم وزارت جهاد کشاورزی (سبز زمردی) */
+[data-org="agri"] {
+    --theme-primary: #059669;
+    --theme-primary-dark: #047857;
+    --theme-accent: #ecfdf5;
+}
+
+/* اعمال تم وزارت نیرو (آبی هیدرولیک) */
+[data-org="water"] {
+    --theme-primary: #2563eb;
+    --theme-primary-dark: #1d4ed8;
+    --theme-accent: #eff6ff;
+}
+
+body {
+    font-family: 'Vazirmatn', sans-serif;
+}
+
+/* استایل‌های کاستوم ابداعی برای کارت‌ها و المان‌های خاص */
+.custom-stat-card {
+    border-bottom: 4px solid var(--theme-primary);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-stat-card:hover {
+    transform: translateY(-4px);
+}
+
+.dynamic-bg-accent {
+    background-color: var(--theme-accent);
+}
+
+.dynamic-text-primary {
+    color: var(--theme-primary);
+}
+
+.dynamic-btn-primary {
+    background-color: var(--theme-primary);
+}
+
+.dynamic-btn-primary:hover {
+    background-color: var(--theme-primary-dark);
+}
+
+/* انیمیشن پالس برای المان‌های در حال بررسی */
+@keyframes custom-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+.animate-status-pulse {
+    animation: custom-pulse 2s infinite ease-in-out;
+}

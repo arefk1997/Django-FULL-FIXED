@@ -1,0 +1,233 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ثبت‌نام کشاورز | سامانه هوشمند پایش</title>
+
+    <link rel="stylesheet" href="{% static 'accounts/css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/css/all.min.css' %}">
+
+    <style>
+        :root {
+            --primary-green: #065f46; /* سبز تیره زمردی برای خوانایی بهتر */
+            --light-bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --accent-green: #10b981;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: var(--light-bg);
+            padding: 3rem 1rem;
+            margin: 0;
+            color: #1f2937;
+        }
+
+        .signup-card {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 2rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            border-top: 10px solid var(--primary-green);
+        }
+
+        .section-title {
+            background: #ecfdf5;
+            padding: 0.75rem 1rem;
+            border-right: 4px solid var(--accent-green);
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--primary-green);
+            margin: 1.5rem 0 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 1rem;
+            outline: none;
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .signup-btn {
+            width: 100%;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 1.25rem;
+            font-weight: 900;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 12px rgba(6, 95, 70, 0.2);
+        }
+
+        .signup-btn:hover {
+            background: #044e3a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(6, 95, 70, 0.3);
+        }
+
+        .error-text {
+            color: #dc2626;
+            font-size: 0.75rem;
+            margin-top: 0.4rem;
+            font-weight: 700;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="signup-card">
+        <header style="text-align: center; margin-bottom: 2rem;">
+            <div style="background: var(--primary-green); width: 70px; height: 70px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: white; font-size: 2rem;">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <h2 style="font-size: 1.6rem; font-weight: 900; color: #111827; margin: 0;">ایجاد حساب کشاورز</h2>
+            <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">اطلاعات دقیق خود را برای دسترسی به پنل پایش وارد کنید</p>
+        </header>
+
+        <form method="post" enctype="multipart/form-data" id="signup-form">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div style="background: #fef2f2; color: #991b1b; padding: 1rem; border-radius: 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; font-weight: 800; border: 1px solid #fee2e2;">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="section-title">۱. تعیین محدوده فعالیت (استان و شهر)</div>
+
+            <div class="form-group">
+                <label>استان محل مزرعه</label>
+                {{ form.province }}
+                {{ form.province.errors }}
+            </div>
+
+            <div class="form-group">
+                <label>شهرستان</label>
+                {{ form.city }}
+                {{ form.city.errors }}
+            </div>
+
+            <div class="form-group">
+                <label>بخش / حوزه</label>
+                {{ form.chosen_region }}
+                {{ form.chosen_region.errors }}
+            </div>
+
+            <div class="section-title">۲. اطلاعات ورود و شناسایی</div>
+
+            {% for field in form %}
+                {% if field.name not in "province city chosen_region" %}
+                <div class="form-group">
+                    <label>{{ field.label }} {% if field.field.required %}<span style="color: #dc2626;">*</span>{% endif %}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <span class="error-text"><i class="fas fa-exclamation-triangle ml-1"></i> {{ field.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+
+            <button type="submit" class="signup-btn">
+                ثبت‌نام و ارسال برای تایید
+            </button>
+        </form>
+
+        <footer style="margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; text-align: center;">
+            <p style="font-size: 0.9rem; color: #4b5563; font-weight: 700;">
+                قبلاً عضو شده‌اید؟
+                <a href="{% url 'login' %}" style="color: var(--accent-green); text-decoration: none; font-weight: 900; margin-right: 5px;">ورود به حساب</a>
+            </p>
+            <a href="/" style="display: inline-block; margin-top: 1rem; font-size: 0.8rem; color: #9ca3af; text-decoration: none; transition: 0.2s;">
+                <i class="fas fa-chevron-right ml-1"></i> بازگشت به صفحه اصلی
+            </a>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // اطمینان حاصل کنید که این URL در urls.py تعریف شده باشد
+            const ajaxUrl = "{% url 'ajax_load_sub_regions' %}";
+            const provinceSelect = document.querySelector('select[name="province"]');
+            const citySelect = document.querySelector('select[name="city"]');
+            const regionSelect = document.querySelector('select[name="chosen_region"]');
+
+            function clearAndReset(element, text) {
+                element.innerHTML = `<option value="">${text}</option>`;
+            }
+
+            if(provinceSelect) {
+                provinceSelect.addEventListener('change', function() {
+                    const provinceId = this.value;
+                    if (!provinceId) {
+                        clearAndReset(citySelect, "ابتدا استان را انتخاب کنید");
+                        clearAndReset(regionSelect, "ابتدا شهرستان را انتخاب کنید");
+                        return;
+                    }
+
+                    citySelect.innerHTML = '<option>در حال بارگذاری...</option>';
+
+                    fetch(`${ajaxUrl}?parent_id=${provinceId}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            clearAndReset(citySelect, "انتخاب شهرستان...");
+                            data.forEach(item => {
+                                citySelect.innerHTML += `<option value="${item.id}">${item.name}</option>`;
+                            });
+                            clearAndReset(regionSelect, "ابتدا شهرستان را انتخاب کنید");
+                        });
+                });
+            }
+
+            if(citySelect) {
+                citySelect.addEventListener('change', function() {
+                    const cityId = this.value;
+                    if (!cityId) {
+                        clearAndReset(regionSelect, "ابتدا شهرستان را انتخاب کنید");
+                        return;
+                    }
+
+                    regionSelect.innerHTML = '<option>در حال بارگذاری...</option>';
+
+                    fetch(`${ajaxUrl}?parent_id=${cityId}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            clearAndReset(regionSelect, "انتخاب بخش/حوزه...");
+                            data.forEach(item => {
+                                regionSelect.innerHTML += `<option value="${item.id}">${item.name}</option>`;
+                            });
+                        });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

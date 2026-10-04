@@ -1,0 +1,22 @@
+{% extends "accounts/dashboards/base.html" %}
+{% block content %}
+<div dir="rtl" style="padding:30px; font-family:Tahoma;">
+    <h2>ثبت متغیرهای فعالیت: {{ task.activity.title }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {% for var in variables %}
+            <div style="margin-bottom:15px;">
+                <label>{{ var.name }}</label>
+                <input type="{% if var.field_type == 'number' %}number step="0.001"{% else %}text{% endif %}"
+                       name="var_{{ var.id }}" required
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+            </div>
+        {% endfor %}
+        <div style="margin-bottom:15px;">
+            <label>درصد پیشرفت (۰ تا ۱۰۰)</label>
+            <input type="number" name="progress_report" min="0" max="100" value="100">
+        </div>
+        <button type="submit" class="bg-emerald-600 text-white px-6 py-2 rounded-lg">ثبت و ارسال</button>
+    </form>
+</div>
+{% endblock %}

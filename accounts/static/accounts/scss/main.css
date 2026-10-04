@@ -1,0 +1,66 @@
+// --- متغیرهای اختصاصی سامانه آب ---
+$navy-dark: #0f172a;    // سرمه‌ای سایدبار
+$primary-blue: #2563eb; // آبی اکشن
+$emerald-green: #059669; // سبز تایید صلاحیت
+$slate-bg: #f8fafc;     // خاکستری روشن پس‌زمینه
+$transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+// --- استایل‌های پایه ---
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: $slate-bg;
+    direction: rtl;
+
+    // سایدبار هوشمند
+    .sidebar {
+        width: 280px;
+        background-color: $navy-dark;
+        color: white;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        transition: $transition;
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            border-right: 4px solid transparent;
+            transition: $transition;
+
+            &:hover, &.active {
+                background: rgba(255, 255, 255, 0.05);
+                color: white;
+                border-right-color: $primary-blue;
+            }
+
+            i { margin-left: 0.75rem; font-size: 1.1rem; }
+        }
+    }
+
+    // بدنه اصلی محتوا
+    .main-content {
+        flex: 1;
+        padding: 2rem;
+
+        // کارت‌های شاخص (اسلاید ۳ پاورپوینت)
+        .stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-bottom: 4px solid #e2e8f0;
+            transition: $transition;
+
+            &:hover { transform: translateY(-5px); }
+            &.blue { border-bottom-color: $primary-blue; }
+            &.green { border-bottom-color: $emerald-green; }
+
+            .label { color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem; }
+            .value { font-size: 1.75rem; font-weight: 800; color: $navy-dark; }
+        }
+    }
+}

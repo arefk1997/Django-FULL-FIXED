@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}پنل مدیریت شرکت منابع آب ایران{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'accounts/css/dashboard_styles.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/css/all.min.css' %}">
+
+    <style>
+        /* تنظیمات اختصاصی فونت و تم لایه ۱ */
+        @font-face {
+            font-family: 'Vazir';
+            src: url("{% static 'accounts/fonts/Vazirmatn-Regular.woff2' %}") format('woff2');
+        }
+
+        body {
+            font-family: 'Vazir', sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+        }
+
+        .sidebar-container {
+            width: 300px;
+            background: white;
+            border-left: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            box-shadow: 10px 0 15px -3px rgba(0,0,0,0.02);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1.25rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.75rem;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background-color: #f1f5f9;
+            color: var(--primary-blue, #2563eb);
+        }
+
+        .nav-link.active {
+            background-color: var(--primary-blue, #2563eb);
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .nav-link i {
+            margin-left: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2.5rem;
+            overflow-y: auto;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div style="display: flex; min-height: 100vh;">
+
+        <aside class="sidebar-container">
+            <div style="padding: 2.5rem 1.5rem; text-align: center;">
+                <div style="background: #eff6ff; width: 60px; height: 60px; border-radius: 1.25rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: var(--primary-blue, #2563eb);">
+                    <i class="fas fa-tint fa-2x"></i>
+                </div>
+                <h2 style="font-size: 1.1rem; font-weight: 900; color: #1e3a8a; margin: 0;">مدیریت منابع آب کشور</h2>
+                <p style="font-size: 0.65rem; color: #94a3b8; margin-top: 0.5rem; font-weight: 700;">شرکت مادر تخصصی مدیریت منابع آب</p>
+
+                {% if user.is_authenticated and user.company %}
+                <span style="font-size: 10px; background: #f1f5f9; color: #334155; font-weight: bold; padding: 4px 8px; border-radius: 8px; display: inline-block; margin-top: 8px;">
+                     وزارت مرجع: {{ user.company.get_org_type_display|default:"وزارت نیرو" }}
+                </span>
+                {% endif %}
+            </div>
+
+            <nav style="flex: 1; padding: 0 1.25rem;">
+                <a href="{% url 'official_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'official_dashboard' %}active{% endif %}">
+                    <i class="fas fa-chart-pie"></i> میز کار اصلی (داشبورد)
+                </a>
+
+                <a href="{% url 'manage_permissions' %}" class="nav-link {% if request.resolver_match.url_name == 'manage_permissions' %}active{% endif %}">
+                    <i class="fas fa-user-shield"></i> مدیریت دسترسی‌ها
+                </a>
+
+                <a href="{% url 'indicators:manager_indicator_summary' %}" class="nav-link {% if request.resolver_match.view_name == 'indicators:manager_indicator_summary' %}active{% endif %}">
+                    <i class="fas fa-gauge-high"></i> شاخص‌های بهره‌وری
+                </a>
+
+                <a href="{% url 'indicators:indicator_statistics' %}" class="nav-link {% if request.resolver_match.view_name == 'indicators:indicator_statistics' %}active{% endif %}">
+                    <i class="fas fa-file-excel"></i> خروجی پاسخنامه‌ها (آمار)
+                </a>
+
+                <a href="{% url 'indicators:crop_list' %}" class="nav-link {% if request.resolver_match.view_name == 'indicators:crop_list' %}active{% endif %}">
+                    <i class="fas fa-database"></i> تعریف داده‌های ورودی
+                </a>
+            </nav>
+
+            <div style="padding: 1.5rem; border-top: 1px solid #f1f5f9;">
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" style="width: 100%; background: #fef2f2; color: var(--danger-red, #ef4444); border: none; padding: 0.75rem; border-radius: 0.75rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.8rem;">
+                        <i class="fas fa-power-off"></i> خروج از پنل
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="dashboard-wrapper">
+
+                {% block dashboard_header %}{% endblock %}
+
+                {% if messages %}
+                    {% for m in messages %}
+                        <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem; font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-check-circle"></i> {{ m }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block dashboard_content %}{% endblock %}
+
+            </div>
+        </main>
+    </div>
+
+    <script src="{% static 'accounts/js/chart.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

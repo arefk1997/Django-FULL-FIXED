@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فرم ثبت داده‌های عملیاتی | شرکت منابع آب ایران</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/vazirmatn-font@2.1.2/dist/font-face.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{% static 'accounts/js/tailwind.js' %}"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Vazirmatn', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #f8fafc; margin: 0; }
+
+        /* تزریق پویای کلاس‌های یکپارچه و مدرن به فیلدهای جنگو */
+        .custom-form-field input,
+        .custom-form-field select,
+        .custom-form-field textarea {
+            width: 100%;
+            padding: 0.85rem 1.25rem;
+            border: 2px solid #f1f5f9; /* slate-100 */
+            border-radius: 0.75rem; /* rounded-xl */
+            outline: none;
+            color: #1e293b; /* slate-800 */
+            font-weight: 700;
+            transition: all 0.2s ease-in-out;
+        }
+        .custom-form-field input:focus,
+        .custom-form-field select:focus,
+        .custom-form-field textarea:focus {
+            border-color: #2563eb !important; /* blue-600 */
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="flex min-h-screen bg-slate-50" dir="rtl">
+
+    <aside class="w-80 bg-slate-900 text-white flex flex-col justify-between p-6 shadow-2xl border-l border-slate-800 shrink-0">
+        <div>
+            <div class="border-b border-slate-800 pb-6 text-center">
+                <div class="w-16 h-16 bg-blue-600/10 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-blue-400 text-2xl shadow-inner">
+                    <i class="fas fa-droplet text-blue-500"></i>
+                </div>
+                <h2 class="font-black text-sm text-slate-100 tracking-wide mb-1">مدیریت منابع آب کشور</h2>
+                <span class="text-[10px] bg-slate-800 text-blue-400 font-bold px-2.5 py-1.5 rounded-xl border border-slate-700/50 block mt-2">
+                     وزارت مرجع: {{ user.company.get_org_type_display|default:"وزارت نیرو / شرکت مادر تخصصی" }}
+                </span>
+            </div>
+
+            <nav class="space-y-2 mt-6">
+                <a href="{% url 'official_dashboard' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-chart-pie ml-3 text-base"></i>میز کار اصلی (داشبورد)
+                </a>
+                <a href="{% url 'manage_permissions' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-shield-halved ml-3 text-base"></i>مدیریت دسترسی‌ها
+                </a>
+                <a href="{% url 'indicators:manager_indicator_summary' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-gauge-high ml-3 text-base"></i>شاخص‌های بهره‌وری
+                </a>
+                <a href="{% url 'indicators:indicator_statistics' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-file-export ml-3 text-base"></i>خروجی پاسخنامه‌ها (آمار)
+                </a>
+                <a href="{% url 'indicators:crop_list' %}" class="flex items-center p-3 rounded-xl bg-blue-600 font-black text-xs text-white shadow-lg shadow-blue-600/20 transition">
+                    <i class="fas fa-list-check ml-3 text-base"></i>تعریف داده‌های ورودی
+                </a>
+            </nav>
+        </div>
+
+        <div class="border-t border-slate-800 pt-4">
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="w-full flex items-center justify-center gap-2 p-3 bg-rose-950/40 text-rose-400 hover:bg-rose-900 hover:text-white rounded-xl border border-rose-900/30 text-xs font-black transition">
+                    <i class="fas fa-right-from-bracket"></i> خروج از سیستم
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <main class="flex-grow p-4 md:p-8 overflow-y-auto">
+
+        <div class="max-w-4xl mx-auto mt-4 mb-12">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+
+                <div class="bg-slate-50 border-b border-slate-200 p-6 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white text-2xl shadow-lg shadow-blue-100 ml-4">
+                            {{ crop.icon|default:"🌾" }}
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800">فرم ثبت داده‌های عملیاتی</h2>
+                            <p class="text-sm text-slate-500 mt-1">محصول: <span class="text-blue-600 font-semibold">{{ crop.name }}</span> | قلمرو نظارتی: <span class="text-slate-700 font-medium">{{ region.name }}</span></p>
+                        </div>
+                    </div>
+                    <div class="hidden md:block">
+                        <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-blue-100">
+                             تعداد متغیرها: {{ variables_count }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-8">
+                    <div class="mb-8 flex items-start bg-amber-50 border-r-4 border-amber-400 p-4 rounded-md">
+                        <div class="ml-3 text-amber-600 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <p class="text-xs text-amber-800 leading-relaxed font-medium">
+                            کارشناس گرامی، دقت در وارد کردن داده‌ها الزامی است. این مقادیر ابتدا به صورت پیش‌نویس ذخیره شده و پس از بررسی و تایید نهایی در کارتابل مدیریت، مستقیماً در موتور محاسباتی شاخص‌های کلان بهره‌وری اعمال خواهند شد.
+                        </p>
+                    </div>
+
+                    <form method="post" class="space-y-6" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm font-medium">
+                                {{ form.non_field_errors.0 }}
+                            </div>
+                        {% endif %}
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+                            {% for field in form %}
+                                <div class="flex flex-col">
+                                    <label for="{{ field.id_for_label }}" class="text-sm font-bold text-slate-700 mb-2 flex items-center">
+                                        {{ field.label }}
+                                        {% if field.field.required %}
+                                            <span class="text-red-500 mr-1">*</span>
+                                        {% endif %}
+                                    </label>
+
+                                    <div class="relative custom-form-field">
+                                        {{ field }}
+                                    </div>
+
+                                    {% if field.errors %}
+                                        <div class="mt-1 flex items-center text-red-600">
+                                            <span class="text-[11px] font-bold">{{ field.errors.0 }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row-reverse gap-4">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-10 rounded-xl transition-all shadow-lg shadow-blue-200 flex items-center justify-center group">
+                                <span>ذخیره پیش‌نویس اطلاعات</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 group-hover:translate-x-[-4px] transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin='round' stroke-width='2' d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
+                                </svg>
+                            </button>
+
+                            <a href="{% url 'indicators:crop_list' %}" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3.5 px-8 rounded-xl transition-all text-center">
+                                انصراف و بازگشت
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/vazirmatn-font@2.1.2/dist/font-face.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="{% static 'accounts/js/tailwind.js' %}"></script>
+
+<script>
+    tailwind.config = {
+        theme: { extend: { fontFamily: { sans: ['Vazirmatn', 'sans-serif'] } } }
+    }
+</script>
+
+<style>
+    body { font-family: 'Vazirmatn', sans-serif; background-color: #f8fafc; }
+</style>
+
+<div class="flex min-h-screen bg-slate-50 text-right" dir="rtl">
+
+    <aside class="w-80 bg-slate-900 text-white flex flex-col justify-between p-6 shadow-2xl border-l border-slate-800 shrink-0">
+        <div>
+            <div class="border-b border-slate-800 pb-6 text-center">
+                <div class="w-16 h-16 bg-blue-600/10 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-blue-400 text-2xl">
+                    <i class="fas fa-droplet text-blue-500"></i>
+                </div>
+                <h2 class="font-black text-sm text-slate-100 mb-1">مدیریت منابع آب کشور</h2>
+                <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded-md block mt-1">پنل ارشد نظارت بر دسترسی‌ها</span>
+            </div>
+
+            <nav class="relative space-y-1 mt-6">
+                <a href="{% url 'official_dashboard' %}" class="nav-item flex items-center p-3 rounded-xl text-slate-400 hover:text-slate-200 font-bold text-xs transition-colors duration-200 group">
+                    <i class="fas fa-chart-pie ml-3 text-base text-slate-500 group-hover:text-slate-300"></i>میز کار اصلی (داشبورد)
+                </a>
+
+                <div class="relative group">
+                    <div class="absolute inset-0 bg-blue-600 rounded-xl shadow-lg shadow-blue-600/20 transition-all duration-300 ease-in-out"></div>
+                    <a href="{% url 'manage_permissions' %}" class="relative flex items-center p-3 rounded-xl font-black text-xs text-white z-10">
+                        <i class="fas fa-shield-halved ml-3 text-base text-white animate-pulse"></i>مدیریت دسترسی‌ها
+                    </a>
+                </div>
+
+                <a href="{% url 'indicators:manager_indicator_summary' %}" class="nav-item flex items-center p-3 rounded-xl text-slate-400 hover:text-slate-200 font-bold text-xs transition-colors duration-200 group">
+                    <i class="fas fa-chart-line ml-3 text-base text-slate-500 group-hover:text-slate-300"></i>شاخص‌های بهره‌وری
+                </a>
+
+                <a href="{% url 'indicators:crop_list' %}" class="nav-item flex items-center p-3 rounded-xl text-slate-400 hover:text-slate-200 font-bold text-xs transition-colors duration-200 group">
+                    <i class="fas fa-database ml-3 text-base text-slate-500 group-hover:text-slate-300"></i>تعریف داده‌های ورودی
+                </a>
+
+                <a href="{% url 'indicators:indicator_statistics' %}" class="nav-item flex items-center p-3 rounded-xl text-slate-400 hover:text-slate-200 font-bold text-xs transition-colors duration-200 group">
+                    <i class="fas fa-file-invoice ml-3 text-base text-slate-500 group-hover:text-slate-300"></i>خروجی و پاسخنامه‌ها
+                </a>
+            </nav>
+        </div>
+
+        <div class="border-t border-slate-800 pt-4">
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="w-full flex items-center justify-center gap-2 p-3 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-400 rounded-xl text-xs font-black transition-all duration-200">
+                    <i class="fas fa-sign-out-alt"></i> خروج از سیستم
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <main class="flex-grow p-8 md:p-12 overflow-y-auto">
+
+        {% if error_message %}
+        <div class="bg-red-50 text-red-800 border border-red-200 p-4 rounded-2xl mb-6 font-bold text-xs">
+            <i class="fas fa-exclamation-triangle ml-2"></i> {{ error_message }}
+        </div>
+        {% endif %}
+
+        <header class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-200/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl font-bold border border-indigo-100 shadow-sm">
+                    <i class="fas fa-sitemap"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-black text-slate-800">ساختار سازمانی کنترل صلاحیت و مدیریت دسترسی‌ها</h1>
+                    <p class="text-xs text-slate-500 font-bold mt-1.5">
+                        واحد سازمانی مرجع: <span class="text-indigo-600 font-black">{{ company_name }}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="bg-blue-50 text-blue-800 border border-blue-200 text-[11px] px-4 py-2 rounded-xl font-bold max-w-md">
+                <i class="fas fa-user-shield ml-1"></i> امنیت ساختاری: دسترسی پرسنل و مدیران کل دفاتر تابعه به صورت تفکیک‌شده بر اساس گروه‌های تحت پوشش سازمان در درخت چارت رندر شده است.
+            </div>
+        </header>
+
+        <section class="bg-white rounded-[2rem] shadow-sm border border-slate-200/60 p-6 md:p-8">
+            <div class="border-b border-slate-100 pb-4 mb-6">
+                <h3 class="font-black text-sm text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-folder-tree text-indigo-500"></i> تفکیک دپارتمان‌ها و سطوح دسترسی زنجیره‌ای پرسنل تابعه
+                </h3>
+            </div>
+
+            <div class="space-y-8">
+                <div class="flex items-center gap-3 bg-slate-900 text-white p-4 rounded-2xl w-fit border border-slate-800 shadow-md">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-user-tie"></i></div>
+                    <div>
+                        <span class="text-xs font-black block">{{ user.get_full_name|default:user.username }} (شما)</span>
+                        <span class="text-[10px] text-blue-400 block font-bold">{{ user.get_position_display }} عالی سازمان منابع آب</span>
+                    </div>
+                </div>
+
+                <div class="mr-6 border-r-2 border-dashed border-slate-300 pr-6 space-y-10">
+
+                    {% for group in grouped_companies %}
+                    <div class="relative">
+                        <div class="bg-slate-100 border border-slate-200/60 px-4 py-2.5 rounded-xl font-black text-xs text-indigo-950 w-fit mb-4 shadow-sm flex items-center gap-2">
+                            <i class="fas fa-building text-indigo-600"></i>
+                            <span>ساختار مصوب: {{ group.company_name }}</span>
+                        </div>
+
+                        <div class="space-y-4">
+                            {% for staff in group.staff_list %}
+                            <div class="relative flex flex-col sm:flex-row sm:items-center justify-between bg-white border border-slate-200 p-4 rounded-2xl shadow-sm hover:border-indigo-300 transition-all duration-200 max-w-4xl gap-4">
+                                <div class="absolute -right-6 top-7 w-6 border-t-2 border-dashed border-slate-300"></div>
+
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 {% if staff.position == 'head' %}bg-amber-50 text-amber-600 border border-amber-200{% else %}bg-slate-50 text-slate-600 border border-slate-100{% endif %} rounded-xl flex items-center justify-center text-sm shadow-sm shrink-0">
+                                        {% if staff.position == 'head' %}
+                                            <i class="fas fa-user-shield"></i>
+                                        {% else %}
+                                            <i class="fas fa-user"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-black text-slate-800">{{ staff.custom_full_title }}</h4>
+                                        <p class="text-[10px] text-slate-400 font-bold mt-1">
+                                            قلمرو مدیریت محلی: <span class="text-slate-600 font-black">{{ staff.managed_region.name|default:"کلان سازمانی (ستاد مرکزی)" }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100 w-fit shrink-0 self-end sm:self-auto">
+                                    <span class="text-[11px] font-bold text-slate-600">دسترسی تایید صلاحیت کشاورزان:</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer toggle-permission" data-user-id="{{ staff.id }}" {% if staff.can_approve_farmers %}checked{% endif %}>
+                                        <div class="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="bg-slate-50 border border-slate-200/60 p-6 rounded-2xl text-center max-w-xl">
+                        <p class="text-xs text-slate-400 font-bold">هیچ معاونت، دفتر، گروه یا زیرمجموعه اداری در چارت ساختاری شما ثبت نشده است.</p>
+                    </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    // پردازش لایو و ناهمگام سوییچ‌های دسترسی (Ajax Fetch)
+    document.querySelectorAll('.toggle-permission').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const userId = this.getAttribute('data-user-id');
+            const isChecked = this.checked;
+
+            const formData = new FormData();
+            formData.append('user_id', userId);
+            formData.append('can_approve_farmers', isChecked);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            fetch("{% url 'manage_permissions' %}", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== 'success') {
+                    alert('خطا در بروزرسانی سطح دسترسی سازمانی!');
+                    this.checked = !isChecked;
+                }
+            })
+            .catch(error => {
+                console.error('Network Error:', error);
+                this.checked = !isChecked;
+            });
+        });
+    });
+</script>
+{% endblock %}

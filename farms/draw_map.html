@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+
+<div class="max-w-6xl mx-auto p-4 md:p-8">
+    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+        
+        <div class="p-6 bg-green-600 text-white flex justify-between items-center">
+            <div>
+                <h2 class="text-2xl font-black">ترسیم مرز مزرعه روی نقشه</h2>
+                <p class="text-green-100 text-xs mt-1">لطفاً با کلیک روی لبه‌های زمین خود، محدوده دقیق را مشخص کنید.</p>
+            </div>
+            <a href="{% url 'farmer_dashboard' %}" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-sm transition-all">بازگشت</a>
+        </div>
+
+        <div class="flex flex-col md:flex-row">
+            <div class="w-full md:w-80 p-6 border-l border-gray-100 bg-gray-50">
+                <form id="farmForm" method="POST">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">نام مزرعه</label>
+                        <input type="text" name="farm_name" required placeholder="مثلاً: زمین شمالی ۱" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-500 outline-none transition-all">
+                    </div>
+                    
+                    <input type="hidden" id="boundary_json" name="boundary_json">
+
+                    <div id="area_display" class="mb-6 p-4 bg-white rounded-2xl border border-gray-200 hidden">
+                        <p class="text-[10px] text-gray-500">مساحت تخمینی:</p>
+                        <p class="text-lg font-black text-green-700"><span id="area_val">0</span> هکتار</p>
+                    </div>
+
+                    <button type="submit" id="saveBtn" disabled class="w-full bg-green-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-green-100 opacity-50 cursor-not-allowed transition-all">
+                        ثبت و نهایی‌سازی مرز
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-[10px] text-gray-400 leading-relaxed italic">
+                    راهنما: برای اتمام ترسیم، روی اولین نقطه‌ای که گذاشته‌اید کلیک کنید.
+                </div>
+            </div>
+
+            <div class="flex-1 h-[600px] relative">
+                <div id="map" class="h-full w-full"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+<script>
+    // تنظیمات اولیه نقشه (تمرکز روی ایران)
+    var map = L.map('map').setView([32.4279, 53.6880], 5);
+    
+    // لایه ماهواره‌ای گوگل (بهترین گزینه برای تشخیص زمین کشاورزی)
+    // توجه: تایل مستقیم google.com/vt مشمول شرایط استفاده‌ی رسمی گوگل نیست؛
+    // برای production از Google Maps Platform (با API Key) یا جایگزینی مثل Mapbox/MapTiler استفاده کنید.
+    var satelliteLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{
+        maxZoom: 20,
+        subdomains:['mt0','mt1','mt2','mt3']
+    }).addTo(map);
+
+    var drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    var drawControl = new L.Control.Draw({
+        draw: {
+            polygon: {
+                allowIntersection: false,
+                showArea: true,
+                drawError: { color: '#e1e100', message: 'خطا: مرزها نباید تداخل داشته باشند!' },
+                shapeOptions: { color: '#16a34a' }
+            },
+            polyline: false, circle: false, rectangle: false, marker: false, circlemarker: false
+        },
+        edit: { featureGroup: drawnItems }
+    });
+    map.addControl(drawControl);
+
+    map.on(L.Draw.Event.CREATED, function (e) {
+        var layer = e.layer;
+        drawnItems.clearLayers(); // فقط یک پولیگون مجاز است
+        drawnItems.addLayer(layer);
+        
+        // استخراج دیتا به صورت GeoJSON
+        var shape = layer.toGeoJSON();
+        document.getElementById('boundary_json').value = JSON.stringify(shape.geometry);
+        
+        // فعال کردن دکمه ثبت
+        var btn = document.getElementById('saveBtn');
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        
+        // نمایش مساحت (تقریبی)
+        document.getElementById('area_display').classList.remove('hidden');
+        var area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
+        document.getElementById('area_val').innerText = (area / 10000).toFixed(2);
+    });
+</script>
+{% endblock %}

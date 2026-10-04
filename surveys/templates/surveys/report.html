@@ -1,0 +1,152 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>گزارش جامع پاسخنامه‌ها | شرکت منابع آب ایران</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/vazirmatn-font@2.1.2/dist/font-face.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{% static 'accounts/js/tailwind.js' %}"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Vazirmatn', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #f8fafc; margin: 0; }
+    </style>
+</head>
+<body>
+
+<div class="flex min-h-screen bg-slate-50" dir="rtl">
+
+    <aside class="w-80 bg-slate-900 text-white flex flex-col justify-between p-6 shadow-2xl border-l border-slate-800 shrink-0">
+        <div>
+            <div class="border-b border-slate-800 pb-6 text-center">
+                <div class="w-16 h-16 bg-blue-600/10 border border-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-blue-400 text-2xl shadow-inner">
+                    <i class="fas fa-droplet text-blue-500"></i>
+                </div>
+                <h2 class="font-black text-sm text-slate-100 tracking-wide mb-1">مدیریت منابع آب کشور</h2>
+                <span class="text-[10px] bg-slate-800 text-blue-400 font-bold px-2.5 py-1.5 rounded-xl border border-slate-700/50 block mt-2">
+                     وزارت مرجع: {{ user.company.get_org_type_display|default:"وزارت نیرو / شرکت مادر تخصصی" }}
+                </span>
+            </div>
+
+            <nav class="space-y-2 mt-6">
+                <a href="{% url 'official_dashboard' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-chart-pie ml-3 text-base"></i>میز کار اصلی (داشبورد)
+                </a>
+                <a href="{% url 'manage_permissions' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-shield-halved ml-3 text-base"></i>مدیریت دسترسی‌ها
+                </a>
+                <a href="{% url 'indicators:manager_indicator_summary' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-gauge-high ml-3 text-base"></i>شاخص‌های بهره‌وری
+                </a>
+                <a href="{% url 'indicators:indicator_statistics' %}" class="flex items-center p-3 rounded-xl bg-blue-600 font-black text-xs text-white shadow-lg shadow-blue-600/20 transition">
+                    <i class="fas fa-file-export ml-3 text-base"></i>خروجی پاسخنامه‌ها (آمار)
+                </a>
+                <a href="{% url 'indicators:crop_list' %}" class="flex items-center p-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-list-check ml-3 text-base"></i>تعریف داده‌های ورودی
+                </a>
+            </nav>
+        </div>
+
+        <div class="border-t border-slate-800 pt-4">
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="w-full flex items-center justify-center gap-2 p-3 bg-rose-950/40 text-rose-400 hover:bg-rose-900 hover:text-white rounded-xl border border-rose-900/30 text-xs font-black transition">
+                    <i class="fas fa-right-from-bracket"></i> خروج از سیستم
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <main class="flex-grow p-4 md:p-8 overflow-y-auto">
+        <div class="max-w-6xl mx-auto">
+
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <h1 class="text-2xl md:text-3xl font-black text-gray-800 border-r-4 border-blue-600 pr-4">گزارش جامع پاسخنامه‌ها</h1>
+                <div class="bg-white shadow-sm px-6 py-3 rounded-2xl border border-gray-200 text-gray-600 font-bold text-sm">
+                    تعداد مشارکت‌کنندگان: <span class="font-black text-blue-600 text-xl">{{ users_count }}</span> نفر
+                </div>
+            </div>
+
+            <div class="mb-6 flex justify-end">
+                <a href="{% url 'export_excel' %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 px-6 rounded-xl flex items-center text-xs shadow-lg shadow-emerald-100 transition-all transform hover:-translate-y-1">
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    خروجی اکسل (Excel)
+                </a>
+            </div>
+
+            <div class="bg-white shadow-sm rounded-3xl overflow-hidden border border-slate-200/60">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead class="bg-slate-900 text-white text-xs">
+                            <tr>
+                                <th class="p-5 font-black">کشاورز (کاربر)</th>
+                                <th class="p-5 font-black">پرسشنامه</th>
+                                <th class="p-5 font-black">عنوان سوال</th>
+                                <th class="p-5 font-black text-center">پاسخ ثبت شده</th>
+                                <th class="p-5 font-black text-center">تاریخ ثبت</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-sm">
+                            {% for answer in answers %}
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-5">
+                                    <div class="font-black text-gray-800">{{ answer.user.username }}</div>
+                                    <div class="text-xs text-gray-400 font-bold mt-1">{{ answer.user.get_role_display }}</div>
+                                </td>
+                                <td class="p-5 text-gray-700">
+                                    <span class="bg-blue-50 text-blue-700 px-2.5 py-1.5 rounded-lg text-xs font-black border border-blue-100">
+                                        {{ answer.question.survey.title }}
+                                    </span>
+                                </td>
+                                <td class="p-5 text-gray-600 font-bold text-xs">{{ answer.question.title }}</td>
+                                <td class="p-5 text-center">
+                                    <span class="bg-white px-4 py-2 rounded-xl text-xs text-gray-800 border border-gray-200 shadow-sm inline-block min-w-[100px] font-black">
+                                        {{ answer.value }}
+                                    </span>
+                                </td>
+                                <td class="p-5 text-center text-xs text-gray-400 font-mono" dir="ltr">
+                                    {{ answer.created_at|date:"Y-m-d H:i" }}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="p-20 text-center text-gray-400">
+                                    <div class="text-5xl mb-4 text-gray-200"><i class="fas fa-folder-open"></i></div>
+                                    <p class="text-xs font-black text-slate-500">هنوز هیچ پاسخی در سامانه ثبت نشده است.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-between items-center text-xs font-bold">
+                <a href="{% url 'official_dashboard' %}" class="flex items-center text-blue-600 hover:text-blue-800 transition">
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    بازگشت به میز کار اصلی
+                </a>
+                <span class="text-gray-400 font-medium">سیستم گزارش‌گیری هوشمند منابع آب</span>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+/* Font Awesome Free 6.0.0 ضروری برای داشبورد */
+@font-face {
+  font-family: 'Font Awesome 6 Free';
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url("../webfonts/fa-solid-900.woff2") format("woff2");
+}
+
+.fas, .fa-solid {
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+
+/* آیکون‌های پرکاربرد شما */
+.fa-users:before { content: "\f0c0"; }
+.fa-chart-pie:before { content: "\f200"; }
+.fa-database:before { content: "\f1c0"; }
+.fa-check-circle:before { content: "\f058"; }
+.fa-map-location-dot:before { content: "\f5a0"; }
+.fa-file-excel:before { content: "\f1c3"; }
+.fa-power-off:before { content: "\f011"; }
+.fa-th-large:before { content: "\f009"; }
