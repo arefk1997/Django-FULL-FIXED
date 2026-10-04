@@ -110,26 +110,26 @@
                     <i class="fas fa-chart-line text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-slate-500 text-xs font-bold">میانگین شاخص بهره‌وری آب</p>
-                    <h3 class="text-2xl font-black text-slate-800 mt-1">۱.۸۵ <span class="text-xs font-normal text-slate-400">kg/m³</span></h3>
+                    <p class="text-slate-500 text-xs font-bold">کل پاسخ‌های ثبت‌شده (در قلمرو شما)</p>
+                    <h3 class="text-2xl font-black text-slate-800 mt-1">{{ total_submissions }}</h3>
                 </div>
             </div>
             <div class="stat-box flex items-center gap-4 border-r-8 border-emerald-600">
                 <div class="bg-emerald-50 text-emerald-600 p-4 rounded-2xl flex items-center justify-center w-14 h-14">
-                    <i class="fas fa-tint text-xl"></i>
+                    <i class="fas fa-circle-check text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-slate-500 text-xs font-bold">کل آب مصرفی محاسباتی</p>
-                    <h3 class="text-2xl font-black text-slate-800 mt-1">۴۵۰,۰۰۰ <span class="text-xs font-normal text-slate-400">m³</span></h3>
+                    <p class="text-slate-500 text-xs font-bold">تایید نهایی شده (verified)</p>
+                    <h3 class="text-2xl font-black text-slate-800 mt-1">{{ verified_count }}</h3>
                 </div>
             </div>
             <div class="stat-box flex items-center gap-4 border-r-8 border-amber-500">
                 <div class="bg-amber-50 text-amber-500 p-4 rounded-2xl flex items-center justify-center w-14 h-14">
-                    <i class="fas fa-users text-xl"></i>
+                    <i class="fas fa-hourglass-half text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-slate-500 text-xs font-bold">نسبت مشارکت کارشناسان</p>
-                    <h3 class="text-2xl font-black text-slate-800 mt-1">۹۲٪</h3>
+                    <p class="text-slate-500 text-xs font-bold">در انتظار بررسی (draft + submitted)</p>
+                    <h3 class="text-2xl font-black text-slate-800 mt-1">{{ draft_count|add:submitted_count }}</h3>
                 </div>
             </div>
         </div>
@@ -137,7 +137,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div class="stat-box">
                 <h3 class="font-black text-slate-800 mb-6 flex items-center gap-2">
-                    <span class="w-2 h-6 bg-indigo-500 rounded-full"></span> مقایسه بهره‌وری محصولات الگوی کشت
+                    <span class="w-2 h-6 bg-indigo-500 rounded-full"></span> پرمشارکت‌ترین محصولات (تعداد پاسخ ثبت‌شده)
                 </h3>
                 <div class="chart-container">
                     <canvas id="productivityChart"></canvas>
@@ -158,19 +158,25 @@
 </div>
 
 <script>
-    // تنظیمات زبان و جهت راست‌به‌چپ برای چارت‌ها
+    // داده‌ی واقعی از indicator_statistics (indicators/views.py)؛ قبلاً این
+    // اعداد و لیبل‌ها به‌صورت کاملاً ثابت (hardcode) در همین فایل نوشته
+    // شده بودند و به هیچ context ای وصل نبودند.
+    const trendLabels = {{ trend_labels_json|safe }};
+    const trendValues = {{ trend_values_json|safe }};
+    const cropLabels = {{ crop_labels_json|safe }};
+    const cropValues = {{ crop_values_json|safe }};
+
     if (typeof Chart !== 'undefined') {
         Chart.defaults.font.family = 'Vazirmatn, sans-serif';
 
-        // نمودار مقایسه محصولات
         const ctxProd = document.getElementById('productivityChart').getContext('2d');
         new Chart(ctxProd, {
             type: 'bar',
             data: {
-                labels: ['گندم', 'جو', 'ذرت', 'کلزا', 'چغندرقند'],
+                labels: cropLabels,
                 datasets: [{
-                    label: 'شاخص بهره‌وری (kg/m³)',
-                    data: [1.2, 0.9, 2.1, 1.5, 2.8],
+                    label: 'تعداد پاسخ ثبت‌شده',
+                    data: cropValues,
                     backgroundColor: '#4f46e5',
                     borderRadius: 8,
                     barThickness: 24
@@ -187,15 +193,14 @@
             }
         });
 
-        // نمودار روند خطی ماهانه
         const ctxTrend = document.getElementById('trendChart').getContext('2d');
         new Chart(ctxTrend, {
             type: 'line',
             data: {
-                labels: ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد'],
+                labels: trendLabels,
                 datasets: [{
                     label: 'تعداد گزارش‌های ارسالی',
-                    data: [45, 82, 110, 95, 145],
+                    data: trendValues,
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.06)',
                     fill: true,

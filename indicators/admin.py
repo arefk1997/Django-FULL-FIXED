@@ -1,17 +1,21 @@
+from django import forms
 from django.contrib import admin
 from django.utils.html import format_html
-from django.db.models import Q
 from django.utils.safestring import mark_safe
+
+from accounts.models import Region
+
 from .models import (
     CropCategory, CropFamily, Crop, CropVariety, IndicatorDefinition,
-    VariableDefinition, ExpertAnswerSubmission, ExpertAnswerDetail
+    VariableDefinition, ExpertAnswerSubmission, ExpertAnswerDetail,
+    RegionIndicatorComment,
 )
 
 
 # ۰. مدیریت دسته‌بندی‌های کلان
 @admin.register(CropCategory)
 class CropCategoryAdmin(admin.ModelAdmin):
-    search_fields = ('name',)  # مورد نیاز برای فیلدهای autocomplete سایر مدل‌ها
+    search_fields = ('name',)
     list_display = ('name', 'icon', 'crop_count')
 
     def crop_count(self, obj):
@@ -23,7 +27,7 @@ class CropCategoryAdmin(admin.ModelAdmin):
 # ۰.۱. مدیریت خانواده‌های گیاهی
 @admin.register(CropFamily)
 class CropFamilyAdmin(admin.ModelAdmin):
-    search_fields = ('name',)  # مورد نیاز برای فیلدهای autocomplete سایر مدل‌ها
+    search_fields = ('name',)
     list_display = ('name', 'crop_count')
 
     def crop_count(self, obj):
@@ -32,10 +36,10 @@ class CropFamilyAdmin(admin.ModelAdmin):
     crop_count.short_description = "تعداد محصولات این خانواده"
 
 
-# ۰.۲. مدیریت واریته‌های محصول (حل قطعی خطای سیستم چک جنگو admin.E039)
+# ۰.۲. مدیریت واریته‌های محصول
 @admin.register(CropVariety)
 class CropVarietyAdmin(admin.ModelAdmin):
-    search_fields = ('name', 'crop__name')  # فیلد جستجوی اجباری برای فعال شدن autocomplete_fields
+    search_fields = ('name', 'crop__name')
     list_display = ('name', 'crop', 'description')
     list_filter = ('crop',)
 
@@ -44,7 +48,9 @@ class CropVarietyAdmin(admin.ModelAdmin):
 class VariableDefinitionInline(admin.TabularInline):
     model = VariableDefinition
     extra = 1
-    fields = ('code', 'name', 'activity', 'field_type', 'target_indicator', 'order', 'is_obsolete')
+    # فیلد field_type حذف شد (همه‌ی متغیرها همیشه عددی‌اند؛ نگاه کنید به
+    # توضیح بالای models.py).
+    fields = ('code', 'name', 'activity', 'target_indicator', 'order', 'is_obsolete')
     readonly_fields = ('code',)
     ordering = ('order',)
 
@@ -57,7 +63,7 @@ class CropVarietyInline(admin.TabularInline):
 
 @admin.register(Crop)
 class CropAdmin(admin.ModelAdmin):
-    search_fields = ('name', 'slug', 'category__name', 'family__name')  # فیلد جستجوی ریشه محصول
+    search_fields = ('name', 'slug', 'category__name', 'family__name')
     list_display = ('name', 'slug', 'category', 'family', 'is_active', 'variable_count')
     list_editable = ('category', 'family', 'is_active')
     list_filter = ('category', 'family', 'is_active')
@@ -70,10 +76,39 @@ class CropAdmin(admin.ModelAdmin):
     variable_count.short_description = "تعداد سوالات"
 
 
+class IndicatorDefinitionAdminForm(forms.ModelForm):
+    """
+    IndicatorDefinition.calculation_levels یک JSONField (لیستی از اعداد
+    سطح) است. این فرم آن را به یک چک‌باکس چندانتخابی در پنل ادمین تبدیل
+    می‌کند (ادمین باید بتواند مثلاً هم‌زمان «کشوری» و «استانی» را تیک بزند)
+    و در save() به/از لیست JSON تبدیل می‌کند.
+    """
+    calculation_levels = forms.MultipleChoiceField(
+        choices=Region.Level.choices,
+        widget=forms.CheckboxSelectMultiple,
+        label="سطوح محاسبه",
+        help_text="این شاخص در کدام سطح/سطوح جغرافیایی قابل محاسبه و نمایش باشد؟",
+    )
+
+    class Meta:
+        model = IndicatorDefinition
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.initial['calculation_levels'] = [str(lvl) for lvl in (self.instance.calculation_levels or [])]
+
+    def clean_calculation_levels(self):
+        return [int(v) for v in self.cleaned_data['calculation_levels']]
+
+
 @admin.register(IndicatorDefinition)
 class IndicatorDefinitionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'calculation_level', 'scope', 'unit', 'formula_display')
-    list_filter = ('calculation_level', 'scope', 'target_category')
+    form = IndicatorDefinitionAdminForm
+    list_display = ('name', 'scope', 'scope_target_display', 'levels_display', 'unit',
+                     'breakdown_summary', 'visible_to_farmers', 'formula_display')
+    list_filter = ('scope', 'target_category', 'target_family', 'visible_to_farmers')
     search_fields = ('name', 'formula')
 
     fieldsets = (
@@ -84,15 +119,50 @@ class IndicatorDefinitionAdmin(admin.ModelAdmin):
                 '<strong>راهنمای فرمول‌نویسی پیشرفته:</strong><br>'
                 '• برای نرمال‌سازی: <code>yield / yield_max</code><br>'
                 '• فرمول شرطی: <code>(yield * 1.1) if yield > 5 else (yield * 0.9)</code><br>'
-                '• توابع ریاضی: <code>math.sqrt(yield)</code> یا <code>yield ** 2</code><br>'
+                '• توابع ریاضی: <code>sqrt(yield)</code> یا <code>yield ** 2</code><br>'
                 '• عملگرهای مجاز: <code>+ - * / **</code> و پرانتز <code>()</code>'
                 '</div>'
             )
         }),
-        ("تنظیمات استراتژیک (سطح و دامنه)", {
-            'fields': ('calculation_level', 'scope', 'target_category'),
+        ("دامنه شمول (محصولی)", {
+            'fields': ('scope', 'target_category', 'target_family'),
+            'description': "اگر دامنه 'دسته محصولات' است، دسته هدف را انتخاب کنید؛ اگر 'خانواده گیاهی' است، خانواده هدف را.",
+        }),
+        ("ریزکاوی اختیاری (Drill-down محصولی)", {
+            'fields': ('breakdown_by_family', 'breakdown_by_crop', 'breakdown_by_variety'),
+            'description': "علاوه بر عدد کلی دسته/خانواده، همان شاخص به تفکیک خانواده/محصول/رقم هم محاسبه و قابل مشاهده باشد.",
+        }),
+        ("سطح جغرافیایی و دسترسی", {
+            'fields': ('calculation_levels', 'visible_to_farmers'),
         }),
     )
+
+    def scope_target_display(self, obj):
+        if obj.scope == 'category':
+            return obj.target_category or '—'
+        if obj.scope == 'family':
+            return obj.target_family or '—'
+        return obj.get_scope_display()
+
+    scope_target_display.short_description = "هدف دامنه"
+
+    def levels_display(self, obj):
+        level_map = dict(Region.Level.choices)
+        return '، '.join(level_map.get(lvl, str(lvl)) for lvl in (obj.calculation_levels or []))
+
+    levels_display.short_description = "سطوح محاسبه"
+
+    def breakdown_summary(self, obj):
+        parts = []
+        if obj.breakdown_by_family:
+            parts.append('خانواده')
+        if obj.breakdown_by_crop:
+            parts.append('محصول')
+        if obj.breakdown_by_variety:
+            parts.append('رقم')
+        return '، '.join(parts) if parts else '—'
+
+    breakdown_summary.short_description = "ریزکاوی"
 
     def formula_display(self, obj):
         if obj.formula:
@@ -122,6 +192,8 @@ class ExpertAnswerDetailInline(admin.TabularInline):
     fields = ('variable', 'value')
 
     def get_readonly_fields(self, request, obj=None):
+        # نکته: obj اینجا شیء والد (ExpertAnswerSubmission) است، نه خودِ
+        # ردیف اینلاین؛ پس obj.status واقعاً معتبر است (و باگ نیست).
         if obj and obj.status == 'verified':
             return ('variable', 'value')
         return ('variable',)
@@ -136,7 +208,6 @@ class ExpertAnswerSubmissionAdmin(admin.ModelAdmin):
     list_filter = ('status', 'crop__category', 'crop__family', 'crop', 'created_at')
     search_fields = ('region__name', 'crop__name', 'variety__name', 'expert__username')
 
-    # همگی مدل‌های داخل این لیست اکنون مجهز به ثبت‌نام ادمین و search_fields معتبر هستند
     autocomplete_fields = ['region', 'expert', 'company', 'crop', 'variety']
     inlines = [ExpertAnswerDetailInline]
     actions = ['make_verified']
@@ -153,7 +224,6 @@ class ExpertAnswerSubmissionAdmin(admin.ModelAdmin):
                           "موارد انتخاب شده تغییر وضعیت داده و جهت استفاده در محاسبات هوشمند شاخص‌ها فعال شدند.")
 
     def crop_icon(self, obj):
-        # جلوگیری از بروز خطای احتمالی در صورت عدم وجود فیلد icon در مدل Crop
         return getattr(obj.crop, 'icon', '📄') or '📄'
 
     crop_icon.short_description = ""
@@ -174,3 +244,17 @@ class ExpertAnswerSubmissionAdmin(admin.ModelAdmin):
             if obj.expert and hasattr(obj.expert, 'company') and not obj.company:
                 obj.company = obj.expert.company
         super().save_model(request, obj, form, change)
+
+
+@admin.register(RegionIndicatorComment)
+class RegionIndicatorCommentAdmin(admin.ModelAdmin):
+    """عمدتاً برای نظارت/دیباگ؛ گفتگوی روزمره از پنل نقشه‌ی شاخص‌ها (manager_summary.html) انجام می‌شود."""
+    list_display = ('region', 'author', 'indicator', 'crop', 'short_message', 'is_resolved', 'created_at')
+    list_filter = ('is_resolved', 'region__level')
+    search_fields = ('region__name', 'author__username', 'message')
+    autocomplete_fields = ['region', 'author', 'indicator', 'crop', 'parent']
+
+    def short_message(self, obj):
+        return obj.message[:50]
+
+    short_message.short_description = "متن"

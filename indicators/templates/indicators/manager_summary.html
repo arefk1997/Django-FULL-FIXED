@@ -8,27 +8,35 @@
 
     <link href="https://cdn.jsdelivr.net/npm/vazirmatn-font@2.1.2/dist/font-face.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="{% static 'accounts/js/tailwind.js' %}"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Vazirmatn', 'sans-serif'],
-                    }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Vazirmatn', 'sans-serif'] } } } }
     </script>
 
     <style>
         body { font-family: 'Vazirmatn', sans-serif; background-color: #f1f5f9; margin: 0; }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* بدون تایل نقشه از سرویس خارجی: فقط خودِ پولیگون مناطق (که در
+           دیتابیس پروژه موجودند) روی یک زمینه‌ی ساده رسم می‌شود. این هم
+           از نظر امنیتی بهتر است (هیچ درخواستی به سرور نقشه‌ی ثالث ارسال
+           نمی‌شود) و هم سریع‌تر لود می‌شود. */
+        /* زمینه‌ی شطرنجی بسیار ملایم به‌جای تایل نقشه‌ی خارجی: فقط یک
+           گرادیان/گرید CSS محلی است، هیچ تصویری از هیچ سروری بارگیری
+           نمی‌شود؛ صرفاً حسِ «روی نقشه بودن» را حفظ می‌کند. */
+        #heatmap {
+            height: 420px;
+            border-radius: 1rem;
+            z-index: 0;
+            background-color: #eef2f7;
+            background-image:
+                linear-gradient(rgba(148, 163, 184, 0.18) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.18) 1px, transparent 1px);
+            background-size: 32px 32px;
         }
-        .animate-fade-up { animation: fadeInUp 0.4s ease-out forwards; }
+        .comment-bubble { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.9rem; padding: 0.75rem 1rem; }
+        .comment-reply { margin-right: 1.5rem; border-right: 2px solid #cbd5e1; padding-right: 0.75rem; }
     </style>
 </head>
 <body class="text-slate-800">
@@ -46,25 +54,20 @@
             </div>
 
             <nav class="space-y-1.5 mt-5">
-                <a href="{% url 'official_dashboard' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800/60 hover:text-white font-bold text-xs transition duration-200">
-                    <i class="fas fa-chart-pie text-sm text-slate-500 group-hover:text-white"></i>
-                    <span>میز کار اصلی (داشبورد)</span>
+                <a href="{% url 'official_dashboard' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800/60 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-chart-pie text-sm text-slate-500"></i><span>میز کار اصلی (داشبورد)</span>
                 </a>
-                <a href="{% url 'manage_permissions' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800/60 hover:text-white font-bold text-xs transition duration-200">
-                    <i class="fas fa-shield-halved text-sm text-slate-500"></i>
-                    <span>مدیریت دسترسی‌ها</span>
+                <a href="{% url 'manage_permissions' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800/60 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-shield-halved text-sm text-slate-500"></i><span>مدیریت دسترسی‌ها</span>
                 </a>
-                <a href="{% url 'indicators:manager_indicator_summary' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-600 font-black text-xs text-white shadow-lg shadow-blue-600/10 transition duration-200">
-                    <i class="fas fa-gauge-high text-sm text-white"></i>
-                    <span>شاخص‌های بهره‌وری</span>
+                <a href="{% url 'indicators:manager_indicator_summary' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-600 font-black text-xs text-white shadow-lg shadow-blue-600/10 transition">
+                    <i class="fas fa-gauge-high text-sm text-white"></i><span>شاخص‌های بهره‌وری</span>
                 </a>
-                <a href="{% url 'indicators:indicator_statistics' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800/60 hover:text-white font-bold text-xs transition duration-200">
-                    <i class="fas fa-file-export text-sm text-slate-500"></i>
-                    <span>خروجی پاسخنامه‌ها (آمار)</span>
+                <a href="{% url 'indicators:indicator_statistics' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800/60 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-file-export text-sm text-slate-500"></i><span>خروجی پاسخنامه‌ها (آمار)</span>
                 </a>
-                <a href="{% url 'indicators:crop_list' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800/60 hover:text-white font-bold text-xs transition duration-200">
-                    <i class="fas fa-list-check text-sm text-slate-500"></i>
-                    <span>تعریف داده‌های ورودی</span>
+                <a href="{% url 'indicators:crop_list' %}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800/60 hover:text-white font-bold text-xs transition">
+                    <i class="fas fa-list-check text-sm text-slate-500"></i><span>تعریف داده‌های ورودی</span>
                 </a>
             </nav>
         </div>
@@ -72,7 +75,7 @@
         <div class="border-t border-slate-800 pt-4 mb-2">
             <form action="{% url 'logout' %}" method="post">
                 {% csrf_token %}
-                <button type="submit" class="w-full flex items-center justify-center gap-2 p-2.5 bg-rose-500/5 hover:bg-rose-500 hover:text-white text-rose-400 rounded-xl border border-rose-500/10 text-xs font-black transition duration-200">
+                <button type="submit" class="w-full flex items-center justify-center gap-2 p-2.5 bg-rose-500/5 hover:bg-rose-500 hover:text-white text-rose-400 rounded-xl border border-rose-500/10 text-xs font-black transition">
                     <i class="fas fa-right-from-bracket text-xs"></i> خروج از سامانه
                 </button>
             </form>
@@ -81,52 +84,382 @@
 
     <main class="flex-grow p-6 md:p-10 overflow-y-auto">
 
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
             <div>
                 <h1 class="text-xl font-black text-slate-800">تحلیل هوشمند شاخص‌های بهره‌وری</h1>
-                <p class="text-slate-400 text-[11px] font-bold mt-1 flex items-center gap-1.5">
+                <!-- مسیر drill-down: کلیک روی هر منطقه در نقشه، یا روی نام منطقه در این breadcrumb -->
+                <p class="text-slate-400 text-[11px] font-bold mt-2 flex items-center gap-1.5 flex-wrap">
                     <i class="fas fa-map-marker-alt text-blue-500"></i>
-                    قلمرو محاسباتی: <span class="text-slate-600 font-black">{{ region.name|default:"ستاد مرکزی (کل کشور)" }}</span>
+                    <a data-keep-filters href="?{% if crop_filter_id %}crop={{ crop_filter_id }}{% endif %}" class="hover:text-blue-600">ریشه</a>
+                    {% for crumb in breadcrumb %}
+                        <span class="text-slate-300">/</span>
+                        <a data-keep-filters href="?region={{ crumb.id }}{% if crop_filter_id %}&crop={{ crop_filter_id }}{% endif %}"
+                           class="{% if forloop.last %}text-slate-700{% else %}hover:text-blue-600{% endif %}">{{ crumb.name }}</a>
+                    {% endfor %}
                 </p>
             </div>
-
-            <form method="GET" class="flex items-center gap-3 w-full md:w-auto">
-                <label for="crop" class="hidden md:block text-xs font-black text-slate-500 shrink-0">انتخاب محصول هدف:</label>
-                <select name="crop" id="crop" onchange="this.form.submit()"
-                        class="bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 block w-full md:w-60 p-3 shadow-sm transition-all outline-none cursor-pointer">
-                    <option value="">انتخاب محصول جهت ارزیابی...</option>
-                    {% for crop in crops %}
-                        <option value="{{ crop.id }}" {% if selected_crop_id == crop.id %}selected{% endif %}>
-                            {{ crop.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </form>
         </div>
 
-        <div class="animate-fade-up">
-            {% if not selected_crop_id %}
-                <div class="bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-sm max-w-xl mx-auto my-6">
-                    <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl border border-blue-100 shadow-inner">
-                        <i class="fas fa-chart-pie"></i>
-                    </div>
-                    <h2 class="text-base font-black text-slate-800">آماده تحلیل و ارزیابی هستید؟</h2>
-                    <p class="text-slate-400 text-xs font-bold mt-2 leading-relaxed max-w-sm mx-auto">
-                        برای فراخوانی متغیرها و اجرای فرمول‌های موتور محاسباتی هوشمند مانیتورینگ آب، لطفاً یک محصول را از منوی بالا انتخاب کنید.
-                    </p>
+        <!-- فیلترها -->
+        <form method="GET" class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm mb-6">
+            {% if selected_region %}<input type="hidden" name="region" value="{{ selected_region.id }}">{% endif %}
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+                <div>
+                    <label class="block text-[11px] font-black text-slate-500 mb-1.5">دسته محصول</label>
+                    <select name="category" class="w-full bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl p-3">
+                        <option value="">همه دسته‌ها</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if category_filter_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-black text-slate-500 mb-1.5">خانواده گیاهی</label>
+                    <select name="family" class="w-full bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl p-3">
+                        <option value="">همه خانواده‌ها</option>
+                        {% for fam in families %}
+                            <option value="{{ fam.id }}" {% if family_filter_id == fam.id %}selected{% endif %}>{{ fam.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-black text-slate-500 mb-1.5">محصول مشخص</label>
+                    <select name="crop" class="w-full bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl p-3">
+                        <option value="">همه محصولات</option>
+                        {% for crop in crops %}
+                            <option value="{{ crop.id }}" {% if crop_filter_id == crop.id %}selected{% endif %}>{{ crop.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-black text-slate-500 mb-1.5">شاخص (نمایش روی هیت‌مپ)</label>
+                    <select id="mapIndicatorSelect" name="map_indicator" class="w-full bg-slate-50 border border-slate-200 text-xs font-bold rounded-xl p-3">
+                        {% for ind in available_indicators %}
+                            <option value="{{ ind.id }}">{{ ind.name }}</option>
+                        {% empty %}
+                            <option value="" selected disabled>شاخصی برای این سطح تعریف نشده</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-xs py-3 rounded-xl shadow-lg shadow-blue-100 transition">
+                        اعمال فیلتر و مقایسه
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-black text-slate-500 mb-2">شاخص‌های جدول مقایسه (چندانتخابی؛ انتخاب نکنید = همه)</label>
+                <div class="flex flex-wrap gap-2">
+                    {% for ind in available_indicators %}
+                        <label class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[11px] font-bold cursor-pointer hover:border-blue-400">
+                            <input type="checkbox" name="indicator" value="{{ ind.id }}"
+                                   {% if ind.id in selected_indicator_ids %}checked{% endif %}>
+                            {{ ind.name }}
+                        </label>
+                    {% empty %}
+                        <p class="text-xs text-slate-400">هیچ شاخصی برای این سطح جغرافیایی تعریف نشده است.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </form>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- هیت‌مپ + drill-down -->
+            <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-black text-sm text-slate-800 flex items-center gap-2">
+                        <span class="w-2 h-6 bg-blue-500 rounded-full"></span> هیت‌مپ مناطق زیرمجموعه
+                    </h3>
+                    <span id="mapIndicatorLabel" class="bg-blue-50 text-blue-700 border border-blue-100 text-[11px] font-black rounded-lg px-3 py-1.5"></span>
+                </div>
+                <p class="text-[11px] text-slate-400 font-bold mb-3">روی هر منطقه کلیک کنید تا وارد همان منطقه شوید (drill-down)؛ برای بازگشت از مسیر بالا استفاده کنید.</p>
+                <div id="heatmap"></div>
+                <div id="mapLegend" class="flex items-center gap-4 mt-3 text-[10px] font-bold text-slate-500"></div>
+            </div>
+
+            <!-- پنل نظرات مدیریتی سلسله‌مراتبی -->
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col">
+                <h3 class="font-black text-sm text-slate-800 flex items-center gap-2 mb-3">
+                    <span class="w-2 h-6 bg-amber-500 rounded-full"></span> نظرات مدیریتی این منطقه
+                </h3>
+                <div id="commentsList" class="space-y-3 overflow-y-auto flex-grow mb-3" style="max-height: 320px;">
+                    <p class="text-xs text-slate-400">در حال بارگذاری...</p>
+                </div>
+                <form id="commentForm" class="border-t border-slate-100 pt-3">
+                    <textarea name="message" rows="2" placeholder="نظر یا هشدار برای مسئول این منطقه..."
+                              class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold mb-2"></textarea>
+                    <input type="hidden" name="parent_id" value="">
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-black text-xs py-2.5 rounded-xl transition">
+                        ارسال نظر
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- جدول مقایسه شاخص‌ها -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 mt-6">
+            <h3 class="font-black text-sm text-slate-800 flex items-center gap-2 mb-4">
+                <span class="w-2 h-6 bg-emerald-500 rounded-full"></span> مقایسه شاخص‌ها در «{{ selected_region.name|default:"کل کشور" }}»
+            </h3>
+
+            {% if not comparison_rows %}
+                <div class="text-center py-10 text-slate-400 text-xs font-bold">
+                    شاخصی برای نمایش انتخاب نشده یا برای این سطح جغرافیایی تعریف نشده است.
                 </div>
             {% else %}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {% for item in indicators_data %}
-                        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <h3 class="font-bold text-sm text-slate-800">{{ item.name }}</h3>
+                <div class="space-y-4">
+                    {% for row in comparison_rows %}
+                        <div class="border border-slate-100 rounded-xl p-4 {% if row.is_valid %}bg-emerald-50/40{% else %}bg-rose-50/40{% endif %}">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-black text-sm text-slate-800">{{ row.indicator.name }}</h4>
+                                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">{{ row.status }}</p>
+                                </div>
+                                <div class="text-left">
+                                    <span class="text-2xl font-black {% if row.is_valid %}text-emerald-700{% else %}text-rose-500{% endif %}">
+                                        {{ row.value|default:"—" }}
+                                    </span>
+                                    <span class="text-[10px] text-slate-400 font-bold">{{ row.indicator.unit }}</span>
+                                </div>
+                            </div>
+
+                            {% if row.breakdown %}
+                                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100">
+                                    {% for b in row.breakdown %}
+                                        <div class="bg-white border border-slate-100 rounded-lg px-3 py-2">
+                                            <p class="text-[10px] text-slate-400 font-bold">{{ b.label }}</p>
+                                            <p class="text-sm font-black text-slate-700">{{ b.value|default:"—" }}</p>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>
             {% endif %}
         </div>
+
     </main>
 </div>
+
+<script>
+    const SELECTED_REGION_ID = {{ selected_region.id|default:"null" }};
+    const COMMENTS_URL_BASE = "/indicators/regions/";
+    const HEATMAP_URL = "{% url 'indicators:indicator_heatmap_data' %}";
+
+    // ---------- هیت‌مپ + drill-down ----------
+    // اصلاح شد: قبلاً با وجود کامنت بالای #heatmap در CSS (که می‌گفت از تایل
+    // نقشه‌ی سرویس خارجی استفاده نمی‌شود)، همین‌جا یک خط L.tileLayer به
+    // سرور تایل OpenStreetMap متصل می‌شد؛ یعنی کد با نیت نوشته‌شده‌اش در
+    // تناقض بود. آن خط حذف شد. حالا هیچ درخواستی برای تصویر زمینه به هیچ
+    // سرویس خارجی نمی‌رود؛ تنها منبع داده‌ی نقشه همان GeoJSON است که از
+    // HEATMAP_URL (یعنی مستقیماً از فیلد geom مدل Region در دیتابیس خودتان)
+    // خوانده می‌شود. minZoom/maxZoom چون دیگر به کاشی‌های ۲۵۶ پیکسلی وابسته
+    // نیستیم، صرفاً برای محدود کردن UX (جلوگیری از زوم بیش‌ازحد تو/بیرون)
+    // روی خود نقشه تنظیم شده‌اند، نه روی یک لایه‌ی تایل.
+    const map = L.map('heatmap', {
+        zoomControl: true,
+        attributionControl: false,
+        minZoom: 4,
+        maxZoom: 12,
+    }).setView([32.4, 53.7], 5);
+    let geoLayer = null;
+
+    // ---------- فیلتر شاخص ----------
+    const mapIndicatorSelectEl = document.getElementById('mapIndicatorSelect');
+    const mapIndicatorLabelEl = document.getElementById('mapIndicatorLabel');
+    const mapLegendEl = document.getElementById('mapLegend');
+
+    function setLegend(html) { mapLegendEl.innerHTML = html; }
+
+    // شاخص انتخاب‌شده را از URL (map_indicator) بازیابی می‌کنیم تا بعد از
+    // «اعمال فیلتر»، drill-down و رفرش صفحه از دست نرود.
+    (function restoreIndicatorFromUrl() {
+        if (!mapIndicatorSelectEl) return;
+        const saved = new URLSearchParams(window.location.search).get('map_indicator');
+        if (saved && [...mapIndicatorSelectEl.options].some(o => o.value === saved)) {
+            mapIndicatorSelectEl.value = saved;
+        }
+    })();
+
+    // برچسب کنار نقشه + آدرس مرورگر + لینک‌های breadcrumb را با شاخص فعلی هماهنگ می‌کند.
+    function syncIndicatorUi() {
+        if (!mapIndicatorSelectEl) return;
+        const value = mapIndicatorSelectEl.value;
+        const opt = mapIndicatorSelectEl.selectedOptions[0];
+        mapIndicatorLabelEl.textContent = value && opt ? opt.textContent.trim() : 'شاخصی انتخاب نشده';
+
+        const params = new URLSearchParams(window.location.search);
+        if (value) params.set('map_indicator', value); else params.delete('map_indicator');
+        history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+
+        document.querySelectorAll('a[data-keep-filters]').forEach(a => {
+            const u = new URL(a.getAttribute('href'), window.location.href);
+            if (value) u.searchParams.set('map_indicator', value); else u.searchParams.delete('map_indicator');
+            a.setAttribute('href', u.pathname + u.search);
+        });
+    }
+
+    // اصلاح شد: رنگ‌آمیزی حالا بر اساس has_data تصمیم می‌گیرد، نه صرفاً
+    // null/undefined بودن value. چون حالا سرور همیشه value عددی (حتی ۰)
+    // برمی‌گرداند، چک قبلی (value === null) دیگر هیچ‌وقت true نمی‌شد و همه‌
+    // چیز رنگ می‌گرفت - حتی مناطق بدون داده‌ی واقعی، انگار مقدار واقعی‌شان
+    // صفر است (بدترین حالت در طیف رنگی). has_data این دو حالت را از هم جدا
+    // نگه می‌دارد.
+    function colorForValue(hasData, value, min, max) {
+        if (!hasData) return '#e2e8f0';
+        if (max === min) return '#3b82f6';
+        const ratio = (value - min) / (max - min);
+        // قرمز (کم) -> زرد -> سبز (زیاد)
+        const hue = Math.max(0, Math.min(120, ratio * 120));
+        return `hsl(${hue}, 70%, 50%)`;
+    }
+
+    function loadHeatmap() {
+        // اصلاح شد: قبلاً اینجا `if (!indicatorId) return;` بود، یعنی تا
+        // وقتی select شاخص‌ها خالی بود (چون هنوز هیچ IndicatorDefinition ای
+        // تعریف نشده) یا کاربر چیزی انتخاب نکرده بود، این تابع حتی یک بار
+        // هم fetch نمی‌زد و نقشه برای همیشه خالی می‌ماند. حالا indicatorId
+        // می‌تواند خالی باشد؛ در آن صورت فقط indicator_id را به سرور
+        // نمی‌فرستیم و سرور خودش مرزها را با value=0/has_data=false
+        // برمی‌گرداند (نگاه کنید به indicators/views.py).
+        syncIndicatorUi();
+        const indicatorId = mapIndicatorSelectEl ? mapIndicatorSelectEl.value : '';
+        const cropSelect = document.querySelector('select[name="crop"]');
+        const cropId = cropSelect ? cropSelect.value : '';
+
+        let url = `${HEATMAP_URL}?`;
+        const params = [];
+        if (indicatorId) params.push(`indicator_id=${indicatorId}`);
+        if (SELECTED_REGION_ID) params.push(`region_id=${SELECTED_REGION_ID}`);
+        if (cropId) params.push(`crop_id=${cropId}`);
+        url += params.join('&');
+
+        fetch(url).then(r => r.json()).then(data => {
+            if (geoLayer) { map.removeLayer(geoLayer); geoLayer = null; }
+            if (data.error) {
+                setLegend(`<span class="text-rose-500">${data.error}</span>`);
+                return;
+            }
+            if (!data.features || !data.features.length) {
+                setLegend('<span class="text-amber-600">برای این منطقه زیرمجموعه‌ای ثبت نشده است.</span>');
+                return;
+            }
+
+            // مقیاس رنگی فقط از روی مناطقی ساخته می‌شود که واقعاً داده
+            // دارند (has_data=true)؛ وگرنه صفرهای placeholder مناطق بی‌داده
+            // کل مقیاس رنگ را به‌هم می‌ریختند.
+            const realValues = data.features
+                .filter(f => f.properties.has_data)
+                .map(f => f.properties.value);
+            const min = realValues.length ? Math.min(...realValues) : 0;
+            const max = realValues.length ? Math.max(...realValues) : 1;
+
+            geoLayer = L.geoJSON(data, {
+                style: (feature) => ({
+                    fillColor: colorForValue(feature.properties.has_data, feature.properties.value, min, max),
+                    weight: 1.5,
+                    color: '#1e293b',
+                    fillOpacity: 0.65,
+                }),
+                onEachFeature: (feature, layer) => {
+                    const label = feature.properties.has_data ? feature.properties.value : 'بدون داده (۰)';
+                    layer.bindTooltip(`${feature.properties.name}: ${label}`);
+                    layer.on('click', () => {
+                        if (feature.properties.has_children) {
+                            const params = new URLSearchParams(window.location.search);
+                            params.set('region', feature.properties.id);
+                            window.location.search = params.toString();
+                        } else {
+                            loadComments(feature.properties.id);
+                        }
+                    });
+                }
+            }).addTo(map);
+
+            try { map.fitBounds(geoLayer.getBounds(), { maxZoom: 9 }); } catch (e) {}
+
+            if (realValues.length) {
+                setLegend(
+                    `<span>کمترین: ${min}</span><span class="flex-grow h-2 rounded-full" style="background: linear-gradient(90deg, hsl(0,70%,50%), hsl(60 89% 40%), hsl(120,70%,50%));"></span><span>بیشترین: ${max}</span>`);
+            } else {
+                setLegend(`<span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm inline-block" style="background:#e2e8f0;"></span> هنوز داده‌ای برای رنگ‌آمیزی ثبت نشده است.</span>`);
+            }
+        }).catch(() => setLegend('<span class="text-rose-500">خطا در دریافت داده‌ی نقشه.</span>'));
+    }
+
+    if (mapIndicatorSelectEl) mapIndicatorSelectEl.addEventListener('change', loadHeatmap);
+    document.querySelector('select[name="crop"]').addEventListener('change', loadHeatmap);
+
+    // اصلاح شد: قبلاً `if (options.length) loadHeatmap();` بود؛ یعنی اگر
+    // select شاخص‌ها خالی بود، حتی در بار اول بارگذاری صفحه هم نقشه کشیده
+    // نمی‌شد. حالا همیشه (چه شاخصی تعریف شده باشد چه نه) نقشه را می‌سازیم.
+    loadHeatmap();
+
+    // ---------- نظرات مدیریتی ----------
+    function renderComment(c) {
+        const repliesHtml = (c.replies || []).map(r => `
+            <div class="comment-reply mt-2">
+                <p class="text-[11px] font-black text-slate-700">${r.author}</p>
+                <p class="text-xs text-slate-600">${r.message}</p>
+                <p class="text-[10px] text-slate-400">${r.created_at}</p>
+            </div>
+        `).join('');
+        return `
+            <div class="comment-bubble">
+                <div class="flex items-center justify-between">
+                    <p class="text-[11px] font-black text-slate-700">${c.author} ${c.is_resolved ? '<span class=\"text-emerald-600\">(رسیدگی شده)</span>' : ''}</p>
+                    <button class="text-[10px] text-blue-600 font-bold" onclick="replyTo(${c.id})">پاسخ</button>
+                </div>
+                <p class="text-xs text-slate-600 mt-1">${c.message}</p>
+                <p class="text-[10px] text-slate-400 mt-1">${c.created_at}</p>
+                ${repliesHtml}
+            </div>
+        `;
+    }
+
+    function loadComments(regionId) {
+        if (!regionId) { document.getElementById('commentsList').innerHTML = '<p class="text-xs text-slate-400">ابتدا یک منطقه را از نقشه انتخاب کنید.</p>'; return; }
+        fetch(`${COMMENTS_URL_BASE}${regionId}/comments/`).then(r => r.json()).then(data => {
+            if (data.error) {
+                document.getElementById('commentsList').innerHTML = `<p class="text-xs text-rose-500">${data.error}</p>`;
+                return;
+            }
+            document.getElementById('commentForm').dataset.regionId = regionId;
+            if (!data.threads.length) {
+                document.getElementById('commentsList').innerHTML = '<p class="text-xs text-slate-400">هنوز نظری ثبت نشده است.</p>';
+                return;
+            }
+            document.getElementById('commentsList').innerHTML = data.threads.map(renderComment).join('');
+        });
+    }
+
+    function replyTo(commentId) {
+        document.querySelector('#commentForm input[name="parent_id"]').value = commentId;
+        document.querySelector('#commentForm textarea').focus();
+    }
+
+    document.getElementById('commentForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const regionId = this.dataset.regionId || SELECTED_REGION_ID;
+        if (!regionId) return;
+        const formData = new FormData(this);
+        fetch(`${COMMENTS_URL_BASE}${regionId}/comments/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            body: formData,
+        }).then(r => r.json()).then(() => {
+            this.querySelector('textarea').value = '';
+            this.querySelector('input[name="parent_id"]').value = '';
+            loadComments(regionId);
+        });
+    });
+
+    if (SELECTED_REGION_ID) loadComments(SELECTED_REGION_ID);
+    else document.getElementById('commentsList').innerHTML = '<p class="text-xs text-slate-400">یک منطقه را از نقشه انتخاب کنید تا نظرات آن را ببینید.</p>';
+</script>
 
 </body>
 </html>

@@ -1,20 +1,21 @@
 from django import forms
-from .models import VariableDefinition
+
+# نکته: تابع create_dynamic_expert_form قبلی از این فایل حذف شد. آن تابع
+# هیچ‌جای پروژه import نمی‌شد (منطق واقعی فرم داینامیک در
+# views.submit_expert_answer پیاده‌سازی شده) و به یک فیلد ناموجود
+# (VariableDefinition.options) ارجاع می‌داد که هیچ‌وقت در مدل تعریف نشده
+# بود؛ یعنی کد مرده‌ای بود که حتی اگر صدا زده می‌شد هم با AttributeError
+# می‌ترکید.
 
 
-def create_dynamic_expert_form(crop_instance):
-    """ایجاد داینامیک فرم بر اساس متغیرهای تعریف شده برای هر محصول"""
-    fields = {}
-    variables = VariableDefinition.objects.filter(crop=crop_instance)
-
-    for var in variables:
-        if var.field_type == 'number':
-            fields[f'var_{var.id}'] = forms.FloatField(label=var.name, required=True)
-        elif var.field_type == 'select':
-            # تبدیل گزینه‌های وارد شده در ادمین به یک لیست (Tuple)
-            choices = [(opt.strip(), opt.strip()) for opt in var.options.split(',')]
-            fields[f'var_{var.id}'] = forms.ChoiceField(label=var.name, choices=choices, required=True)
-        else:
-            fields[f'var_{var.id}'] = forms.CharField(label=var.name, required=True)
-
-    return type('DynamicExpertForm', (forms.Form,), fields)
+class RegionCommentForm(forms.Form):
+    """اعتبارسنجی ساده‌ی متن نظر/پاسخ در ترد کامنت‌های سلسله‌مراتبی مناطق."""
+    message = forms.CharField(
+        label="متن نظر",
+        widget=forms.Textarea(attrs={'rows': 3}),
+        max_length=2000,
+        required=True,
+    )
+    parent_id = forms.IntegerField(required=False)
+    indicator_id = forms.IntegerField(required=False)
+    crop_id = forms.IntegerField(required=False)

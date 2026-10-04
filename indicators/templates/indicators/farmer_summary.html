@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto p-4 md:p-8 mt-6">
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
+        <h2 class="text-2xl font-black text-green-800 mb-1">شاخص‌های بهره‌وری منطقه شما</h2>
+        <p class="text-gray-500 text-sm mb-6">
+            {% if region %}منطقه: {{ region.name }}{% else %}منطقه‌ی شما در سیستم تعریف نشده است.{% endif %}
+        </p>
+
+        {% if not results %}
+            <div class="text-center py-12 text-gray-400">
+                <div class="text-4xl mb-3">📊</div>
+                <p class="text-sm font-bold">در حال حاضر شاخصی برای نمایش به کشاورزان فعال نشده است.</p>
+            </div>
+        {% else %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {% for item in results %}
+                    <div class="border border-gray-100 rounded-2xl p-5 {% if item.value is not None %}bg-green-50/40{% else %}bg-gray-50{% endif %}">
+                        <h3 class="font-bold text-sm text-gray-800">{{ item.indicator.name }}</h3>
+                        <p class="text-2xl font-black mt-2 {% if item.value is not None %}text-green-700{% else %}text-gray-400{% endif %}">
+                            {{ item.value|default:"—" }}
+                            <span class="text-xs font-normal text-gray-400">{{ item.indicator.unit }}</span>
+                        </p>
+                        {% if item.value is None %}
+                            <p class="text-[11px] text-gray-400 mt-1">{{ item.status }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

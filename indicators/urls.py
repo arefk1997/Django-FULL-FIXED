@@ -15,4 +15,14 @@ urlpatterns = [
 
     # ۴. گزارشات آماری پیشرفته، نمودارهای میله‌ای و خطی پایش عملکرد کل شهرستان
     path('statistics/', views.indicator_statistics, name='indicator_statistics'),
+
+    # ۵. داده‌ی GeoJSON هیت‌مپ برای drill-down روی نقشه (AJAX)
+    path('heatmap-data/', views.indicator_heatmap_data, name='indicator_heatmap_data'),
+
+    # ۶. ترد نظرات مدیریتی سلسله‌مراتبی روی یک منطقه (AJAX)
+    path('regions/<int:region_id>/comments/', views.region_comments_view, name='region_comments'),
+    path('comments/<int:comment_id>/resolve/', views.resolve_region_comment, name='resolve_region_comment'),
+
+    # ۷. نمای شاخص‌ها برای کشاورز (فقط شاخص‌های visible_to_farmers=True)
+    path('farmer/summary/', views.farmer_indicator_view, name='farmer_indicator_summary'),
 ]
